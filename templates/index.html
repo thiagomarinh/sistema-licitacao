@@ -397,7 +397,7 @@ function calcItem(item) {
   const novo_lance = parseFloat(item.novo_lance) || 0;
 
   const custo_total = qtd * custo_unit;
-  const preco_venda_unit = divisor > 0 ? custo_unit / divisor : 0;
+  const preco_venda_unit = divisor > 0 ? Math.round((custo_unit / divisor) * 100) / 100 : 0;
   const preco_total = qtd * preco_venda_unit;
   const lucro_bruto_pct = custo_unit > 0 ? (preco_venda_unit - custo_unit) / custo_unit * 100 : 0;
 
@@ -495,7 +495,6 @@ function updateTotals() {
   document.getElementById('ft-preco').textContent = fmtBRL(tot.preco_total);
   document.getElementById('ft-novo').textContent = fmtBRL(tot.novo_total);
   document.getElementById('ft-pct').textContent = fmtPct(novo_lucro_pct_total);
-  document.getElementById('ft-liq').textContent = fmtBRL(tot.lucro_liq_rs);
   document.getElementById('ft-dasn').textContent = fmtBRL(tot.dasn_rs);
   document.getElementById('ft-itens').textContent = itens.length;
 }
