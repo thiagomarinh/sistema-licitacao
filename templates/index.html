@@ -288,7 +288,6 @@
       <th class="grp-novo-lance">NOVO<br>TOTAL</th>
       <th class="grp-novo-lance">NOVO<br>LUCRO %</th>
       <th class="grp-resultados">NOVO<br>LUCRO R$</th>
-      <th class="grp-resultados">LUCRO LÍQ.<br>R$</th>
       <th class="grp-resultados">DASN<br>R$</th>
       <th class="grp-resultados">CUSTO<br>OPERAC.</th>
       <th rowspan="1"></th>
@@ -308,7 +307,6 @@
       <td class="calc-novo num" id="tot-novo-total">R$ 0,00</td>
       <td class="calc-novo pct" id="tot-novo-lucro-pct">—</td>
       <td class="calc-res num" id="tot-novo-lucro-rs">R$ 0,00</td>
-      <td class="calc-res num" id="tot-lucro-liq-rs">R$ 0,00</td>
       <td class="calc-res num" id="tot-dasn-rs">R$ 0,00</td>
       <td class="calc-res num" id="tot-custo-op">R$ 0,00</td>
       <td></td>
@@ -334,10 +332,6 @@
   <div class="t-item">
     <span class="t-label">Novo Lucro Líq. %</span>
     <span class="t-val verde" id="ft-pct">0,00%</span>
-  </div>
-  <div class="t-item">
-    <span class="t-label">Lucro Líq. R$</span>
-    <span class="t-val verde" id="ft-liq">R$ 0,00</span>
   </div>
   <div class="t-item">
     <span class="t-label">DASN R$</span>
@@ -444,7 +438,6 @@ function renderRow(item, idx) {
     <td class="calc-novo">${fmtBRL(calc.novo_total)}</td>
     <td class="${pctClass}">${fmtPct(calc.novo_lucro_pct)}</td>
     <td class="calc-res">${fmtBRL(calc.novo_lucro_rs)}</td>
-    <td class="calc-res">${fmtBRL(calc.lucro_liq_rs)}</td>
     <td class="calc-res">${fmtBRL(calc.dasn_rs)}</td>
     <td class="calc-res">${fmtBRL(calc.custo_op)}</td>
     <td style="text-align:center"><button class="btn-del" onclick="removeItem(${item.id})" title="Remover linha">&#10005;</button></td>
@@ -494,7 +487,6 @@ function updateTotals() {
   document.getElementById('tot-novo-total').textContent = fmtBRL(tot.novo_total);
   document.getElementById('tot-novo-lucro-pct').textContent = fmtPct(novo_lucro_pct_total);
   document.getElementById('tot-novo-lucro-rs').textContent = fmtBRL(tot.novo_lucro_rs);
-  document.getElementById('tot-lucro-liq-rs').textContent = fmtBRL(tot.lucro_liq_rs);
   document.getElementById('tot-dasn-rs').textContent = fmtBRL(tot.dasn_rs);
   document.getElementById('tot-custo-op').textContent = fmtBRL(tot.custo_op);
 
@@ -541,9 +533,8 @@ function setFieldBRL(id, field, input) {
       cells[13].className = pctClass;
       cells[13].textContent = fmtPct(calc.novo_lucro_pct);
       cells[14].textContent = fmtBRL(calc.novo_lucro_rs);
-      cells[15].textContent = fmtBRL(calc.lucro_liq_rs);
-      cells[16].textContent = fmtBRL(calc.dasn_rs);
-      cells[17].textContent = fmtBRL(calc.custo_op);
+      cells[15].textContent = fmtBRL(calc.dasn_rs);
+      cells[16].textContent = fmtBRL(calc.custo_op);
     }
     updateTotals();
     markDirty();
@@ -595,9 +586,8 @@ function setField(id, field, value) {
       cells[13].className = pctClass;
       cells[13].textContent = fmtPct(calc.novo_lucro_pct);
       cells[14].textContent = fmtBRL(calc.novo_lucro_rs);
-      cells[15].textContent = fmtBRL(calc.lucro_liq_rs);
-      cells[16].textContent = fmtBRL(calc.dasn_rs);
-      cells[17].textContent = fmtBRL(calc.custo_op);
+      cells[15].textContent = fmtBRL(calc.dasn_rs);
+      cells[16].textContent = fmtBRL(calc.custo_op);
     }
     updateTotals();
     markDirty();
