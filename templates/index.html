@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Composição de Preços - Licitação</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #222; font-size: 13px; }
+
+  /* TOPO */
+  .topbar {
+    background: linear-gradient(135deg, #1a3a5c, #2e6da4);
+    color: #fff;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar h1 {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .topbar h1 span { color: #7ecbff; }
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+  /* TITULO EDITÁVEL */
+  .titulo-wrap {
+    background: #fff;
+    border-bottom: 3px solid #2e6da4;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #titulo-input {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a3a5c;
+    border: none;
+    border-bottom: 2px dashed #aaa;
+    background: transparent;
+    width: 500px;
+    outline: none;
+    padding: 2px 4px;
+  }
+  #titulo-input:focus { border-bottom-color: #2e6da4; }
+
+  /* CONFIG */
+  .config-bar {
+    background: #e8f0fe;
+    border-bottom: 1px solid #b8cff5;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .config-bar label { font-weight: 600; color: #1a3a5c; font-size: 12px; }
+  .config-bar input[type=number] {
+    width: 60px;
+    border: 1px solid #aac;
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 12px;
+    text-align: center;
+  }
+  .config-bar .config-item { display: flex; align-items: center; gap: 5px; }
+  .config-bar .config-total {
+    background: #1a3a5c;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 12px;
+  }
+
+  /* TABELA */
+  .table-container {
+    overflow-x: auto;
+    padding: 12px 20px 20px;
+  }
+  table {
+    border-collapse: collapse;
+    min-width: 1800px;
+    width: 100%;
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  }
+
+  /* CABEÇALHOS */
+  thead tr.h1 th {
+    background: #1a3a5c;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 6px 4px;
+    text-align: center;
+    border: 1px solid #2e5a8a;
+  }
+  thead tr.h1 th.grp-aquisicao { background: #1a3a5c; }
+  thead tr.h1 th.grp-venda { background: #145a32; }
+  thead tr.h1 th.grp-novo-lance { background: #7d3c00; }
+  thead tr.h1 th.grp-resultados { background: #4a235a; }
+
+  /* LINHAS */
+  tbody tr { transition: background 0.15s; }
+  tbody tr:nth-child(even) { background: #f4f8fd; }
+  tbody tr:hover { background: #ddeeff; }
+  tbody tr.total-row {
+    background: #c5dcf5 !important;
+    font-weight: 700;
+    border-top: 2px solid #1a3a5c;
+  }
+
+  td, th {
+    padding: 5px 5px;
+    border: 1px solid #dde4ef;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  td.num { text-align: right; }
+  td.ctr { text-align: center; }
+  td.seq { text-align: center; color: #888; font-size: 11px; min-width: 30px; }
+
+  /* INPUTS NA TABELA */
+  td input[type=text], td input[type=number] {
+    border: 1px solid transparent;
+    background: transparent;
+    width: 100%;
+    padding: 2px 4px;
+    font-size: 12px;
+    font-family: inherit;
+    outline: none;
+    border-radius: 3px;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  td input:focus {
+    border-color: #2e6da4;
+    background: #eaf3ff;
+  }
+  td input[type=number] { text-align: right; }
+  td.input-desc input { min-width: 220px; }
+  td.input-text input { min-width: 100px; }
+
+  /* CALCULADO */
+  td.calc { background: #f8fffe; color: #145a32; text-align: right; }
+  td.calc-novo { background: #fff8f0; color: #7d3c00; text-align: right; }
+  td.calc-res { background: #fdf5ff; color: #4a235a; text-align: right; }
+  td.pct { text-align: center; }
+  td.pct-verde { color: #1a7a2a; font-weight: 600; text-align: center; }
+  td.pct-warn { color: #c0392b; font-weight: 600; text-align: center; }
+
+  /* BOTÕES */
+  .btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 7px 14px; border: none; border-radius: 5px;
+    cursor: pointer; font-size: 12px; font-weight: 600;
+    transition: all 0.2s; text-decoration: none;
+  }
+  .btn-primary { background: #2e6da4; color: #fff; }
+  .btn-primary:hover { background: #1a4f80; }
+  .btn-success { background: #1e8449; color: #fff; }
+  .btn-success:hover { background: #145a32; }
+  .btn-warning { background: #e67e22; color: #fff; }
+  .btn-warning:hover { background: #ca6f1e; }
+  .btn-danger { background: #c0392b; color: #fff; }
+  .btn-danger:hover { background: #922b21; }
+  .btn-light { background: #ecf0f1; color: #333; border: 1px solid #bbb; }
+  .btn-light:hover { background: #d5dbdb; }
+  .btn-sm { padding: 3px 8px; font-size: 11px; border-radius: 3px; }
+
+  .btn-del {
+    background: none; border: none; color: #c0392b; cursor: pointer;
+    font-size: 14px; padding: 2px 5px; border-radius: 3px;
+    transition: background 0.15s;
+  }
+  .btn-del:hover { background: #fde8e8; }
+
+  /* TOAST */
+  #toast {
+    position: fixed; bottom: 20px; right: 20px;
+    background: #1e8449; color: #fff;
+    padding: 10px 20px; border-radius: 6px;
+    font-size: 13px; font-weight: 600;
+    opacity: 0; transition: opacity 0.3s;
+    pointer-events: none; z-index: 9999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  #toast.show { opacity: 1; }
+  #toast.error { background: #c0392b; }
+
+  /* RODAPÉ TOTAIS FLUTUANTE */
+  .totais-bar {
+    position: sticky;
+    bottom: 0;
+    background: #1a3a5c;
+    color: #fff;
+    padding: 6px 20px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.2);
+  }
+  .totais-bar .t-item { display: flex; flex-direction: column; align-items: center; }
+  .totais-bar .t-label { font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; }
+  .totais-bar .t-val { font-weight: 700; font-size: 14px; color: #7ecbff; }
+  .totais-bar .t-val.verde { color: #7ddc8a; }
+  .totais-bar .t-val.laranja { color: #ffc67a; }
+
+  @media print {
+    .topbar, .config-bar, .titulo-wrap .btn, .btn-del, .totais-bar { display: none !important; }
+    body { background: #fff; }
+    .table-container { padding: 0; }
+    table { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <h1>Composição de <span>Preços</span> &mdash; Licitação</h1>
+  <div class="topbar-actions">
+    <button class="btn btn-light" onclick="addItem()">&#43; Adicionar Item</button>
+    <button class="btn btn-success" onclick="salvar()">&#128190; Salvar</button>
+    <button class="btn btn-warning" onclick="exportarExcel()">&#128196; Exportar Excel</button>
+    <button class="btn btn-light" onclick="window.print()">&#128424; Imprimir</button>
+    <button class="btn btn-danger btn-sm" onclick="limparTudo()" title="Limpar todos os itens">&#128465; Limpar</button>
+  </div>
+</div>
+
+<!-- TITULO EDITÁVEL -->
+<div class="titulo-wrap">
+  <span style="color:#888;font-size:12px;">Título:</span>
+  <input type="text" id="titulo-input" value="COMPOSIÇÃO DE PREÇOS - LICITAÇÃO" oninput="markDirty()">
+</div>
+
+<!-- CONFIGURAÇÕES -->
+<div class="config-bar">
+  <span style="font-weight:700;color:#1a3a5c;font-size:13px;">&#9881; Parâmetros:</span>
+
+  <div class="config-item">
+    <label>Custo Operacional %</label>
+    <input type="number" id="cfg-taxa" value="" min="0" max="100" step="0.01" oninput="recalcAll(); markDirty()">
+  </div>
+  <div class="config-item">
+    <label>Lucro Líquido %</label>
+    <input type="number" id="cfg-lucro" value="" min="0" max="100" step="0.01" oninput="recalcAll(); markDirty()">
+  </div>
+  <div class="config-item">
+    <label>DASN %</label>
+    <input type="number" id="cfg-dasn" value="" min="0" max="100" step="0.01" oninput="recalcAll(); markDirty()">
+  </div>
+
+  <div class="config-total" id="cfg-total-label">Desconto Total: 19,00%</div>
+
+  <span style="margin-left:auto;font-size:11px;color:#666;" id="status-label">&#128994; Salvo</span>
+</div>
+
+<!-- TABELA -->
+<div class="table-container">
+<table id="tabela">
+  <thead>
+    <tr class="h1">
+      <th rowspan="1">#</th>
+      <th rowspan="1">DESCRIÇÃO</th>
+      <th rowspan="1">UND</th>
+      <th rowspan="1">QUANT</th>
+      <th rowspan="1">FORNECEDOR</th>
+      <th rowspan="1">MARCA<br>SELECIONADA</th>
+      <th class="grp-aquisicao">CUSTO UNIT.<br>AQUISIÇÃO</th>
+      <th class="grp-aquisicao">CUSTO TOTAL<br>AQUISIÇÃO</th>
+      <th class="grp-venda">PREÇO VENDA<br>UNIT.</th>
+      <th class="grp-venda">PREÇO<br>TOTAL VENDA</th>
+      <th class="grp-venda">LUCRO<br>BRUTO %</th>
+      <th class="grp-novo-lance">NOVO<br>LANCE</th>
+      <th class="grp-novo-lance">NOVO<br>TOTAL</th>
+      <th class="grp-novo-lance">NOVO<br>LUCRO %</th>
+      <th class="grp-resultados">NOVO<br>LUCRO R$</th>
+      <th class="grp-resultados">LUCRO LÍQ.<br>R$</th>
+      <th class="grp-resultados">DASN<br>R$</th>
+      <th class="grp-resultados">CUSTO<br>OPERAC.</th>
+      <th rowspan="1"></th>
+    </tr>
+  </thead>
+  <tbody id="tbody">
+  </tbody>
+  <tfoot>
+    <tr class="total-row" id="tr-total">
+      <td class="ctr" colspan="6"><strong>T O T A I S</strong></td>
+      <td class="calc num" id="tot-custo-unit">R$ 0,00</td>
+      <td class="calc num" id="tot-custo-total">R$ 0,00</td>
+      <td class="calc num">—</td>
+      <td class="calc num" id="tot-preco-total">R$ 0,00</td>
+      <td class="calc pct">—</td>
+      <td class="calc-novo num">—</td>
+      <td class="calc-novo num" id="tot-novo-total">R$ 0,00</td>
+      <td class="calc-novo pct" id="tot-novo-lucro-pct">—</td>
+      <td class="calc-res num" id="tot-novo-lucro-rs">R$ 0,00</td>
+      <td class="calc-res num" id="tot-lucro-liq-rs">R$ 0,00</td>
+      <td class="calc-res num" id="tot-dasn-rs">R$ 0,00</td>
+      <td class="calc-res num" id="tot-custo-op">R$ 0,00</td>
+      <td></td>
+    </tr>
+  </tfoot>
+</table>
+</div>
+
+<!-- BARRA DE TOTAIS FLUTUANTE -->
+<div class="totais-bar">
+  <div class="t-item">
+    <span class="t-label">Custo Total Aquisição</span>
+    <span class="t-val" id="ft-custo">R$ 0,00</span>
+  </div>
+  <div class="t-item">
+    <span class="t-label">Preço Total Venda</span>
+    <span class="t-val" id="ft-preco">R$ 0,00</span>
+  </div>
+  <div class="t-item">
+    <span class="t-label">Total Novo Lance</span>
+    <span class="t-val laranja" id="ft-novo">R$ 0,00</span>
+  </div>
+  <div class="t-item">
+    <span class="t-label">Novo Lucro Líq. %</span>
+    <span class="t-val verde" id="ft-pct">0,00%</span>
+  </div>
+  <div class="t-item">
+    <span class="t-label">Lucro Líq. R$</span>
+    <span class="t-val verde" id="ft-liq">R$ 0,00</span>
+  </div>
+  <div class="t-item">
+    <span class="t-label">DASN R$</span>
+    <span class="t-val" id="ft-dasn">R$ 0,00</span>
+  </div>
+  <div class="t-item">
+    <span class="t-label">Itens</span>
+    <span class="t-val" id="ft-itens">0</span>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ===================== ESTADO =====================
+let itens = [];
+let dirty = false;
+
+// ===================== FORMATAÇÃO =====================
+function fmtBRL(v) {
+  if (isNaN(v) || v === null || v === undefined) return 'R$ 0,00';
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+function fmtPct(v) {
+  if (isNaN(v) || v === null) return '0,00%';
+  return v.toFixed(2).replace('.', ',') + '%';
+}
+function fmtNum(v, dec = 2) {
+  if (isNaN(v) || v === null) return '0';
+  return v.toLocaleString('pt-BR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+function parseNum(s) {
+  if (!s) return 0;
+  // aceita vírgula como decimal (pt-BR) ou ponto (padrão)
+  return parseFloat(String(s).replace(/\./g, '').replace(',', '.')) || 0;
+}
+
+// ===================== CONFIGURAÇÕES =====================
+function getConfig() {
+  return {
+    taxa: parseFloat(document.getElementById('cfg-taxa').value) || 0,
+    lucro_liq: parseFloat(document.getElementById('cfg-lucro').value) || 0,
+    dasn: parseFloat(document.getElementById('cfg-dasn').value) || 0,
+  };
+}
+
+function updateConfigLabel() {
+  const c = getConfig();
+  const total = c.taxa + c.lucro_liq + c.dasn;
+  document.getElementById('cfg-total-label').textContent = `Desconto Total: ${fmtNum(total, 2)}%`;
+}
+
+// ===================== CALCULAR LINHA =====================
+function calcItem(item) {
+  const c = getConfig();
+  const taxa = c.taxa / 100;
+  const lucro_liq = c.lucro_liq / 100;
+  const dasn = c.dasn / 100;
+  const divisor = 1 - taxa - lucro_liq - dasn;
+
+  const qtd = parseFloat(item.quantidade) || 0;
+  const custo_unit = parseFloat(item.custo_unit) || 0;
+  const novo_lance = parseFloat(item.novo_lance) || 0;
+
+  const custo_total = qtd * custo_unit;
+  const preco_venda_unit = divisor > 0 ? custo_unit / divisor : 0;
+  const preco_total = qtd * preco_venda_unit;
+  const lucro_bruto_pct = custo_unit > 0 ? (preco_venda_unit - custo_unit) / custo_unit * 100 : 0;
+
+  const novo_total = qtd * novo_lance;
+  const novo_lucro_pct = novo_lance > 0
+    ? ((novo_lance - custo_unit) / novo_lance - dasn - taxa) * 100
+    : 0;
+  const novo_lucro_rs = novo_total * (novo_lucro_pct / 100);
+  const lucro_liq_rs = novo_total * lucro_liq;
+  const dasn_rs = novo_total * dasn;
+  const custo_op = novo_total * taxa;
+
+  return {
+    custo_total, preco_venda_unit, preco_total, lucro_bruto_pct,
+    novo_total, novo_lucro_pct, novo_lucro_rs, lucro_liq_rs, dasn_rs, custo_op
+  };
+}
+
+// ===================== RENDERIZAR LINHA =====================
+function renderRow(item, idx) {
+  const calc = calcItem(item);
+  const pctClass = calc.novo_lucro_pct >= 5 ? 'calc-novo pct-verde' :
+                   calc.novo_lucro_pct > 0 ? 'calc-novo pct' : 'calc-novo pct-warn';
+
+  return `<tr id="row-${item.id}" data-id="${item.id}">
+    <td class="seq">${idx + 1}</td>
+    <td class="input-desc"><input type="text" value="${esc(item.descricao)}" placeholder="Descrição do produto..." oninput="setField(${item.id},'descricao',this.value)"></td>
+    <td class="input-text" style="max-width:60px"><input type="text" value="${esc(item.unidade)}" placeholder="UND" oninput="setField(${item.id},'unidade',this.value)"></td>
+    <td style="max-width:70px"><input type="number" value="${item.quantidade||''}" placeholder="0" min="0" step="any" oninput="setField(${item.id},'quantidade',this.value)"></td>
+    <td class="input-text"><input type="text" value="${esc(item.fornecedor)}" placeholder="Fornecedor" oninput="setField(${item.id},'fornecedor',this.value)"></td>
+    <td class="input-text"><input type="text" value="${esc(item.marca)}" placeholder="Marca" oninput="setField(${item.id},'marca',this.value)"></td>
+    <td style="max-width:120px"><div style="display:flex;align-items:center;gap:2px"><span style="color:#888;font-size:11px">R$</span><input type="text" value="${item.custo_unit ? fmtNumInput(item.custo_unit) : ''}" placeholder="0,00" oninput="setFieldBRL(${item.id},'custo_unit',this)" style="text-align:right;flex:1"></div></td>
+    <td class="calc">${fmtBRL(calc.custo_total)}</td>
+    <td class="calc">${fmtBRL(calc.preco_venda_unit)}</td>
+    <td class="calc">${fmtBRL(calc.preco_total)}</td>
+    <td class="calc pct">${fmtPct(calc.lucro_bruto_pct)}</td>
+    <td style="max-width:110px"><input type="number" value="${item.novo_lance||''}" placeholder="0,00" min="0" step="any" oninput="setField(${item.id},'novo_lance',this.value)" style="text-align:right;background:#fff8f0"></td>
+    <td class="calc-novo">${fmtBRL(calc.novo_total)}</td>
+    <td class="${pctClass}">${fmtPct(calc.novo_lucro_pct)}</td>
+    <td class="calc-res">${fmtBRL(calc.novo_lucro_rs)}</td>
+    <td class="calc-res">${fmtBRL(calc.lucro_liq_rs)}</td>
+    <td class="calc-res">${fmtBRL(calc.dasn_rs)}</td>
+    <td class="calc-res">${fmtBRL(calc.custo_op)}</td>
+    <td style="text-align:center"><button class="btn-del" onclick="removeItem(${item.id})" title="Remover linha">&#10005;</button></td>
+  </tr>`;
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ===================== RENDERIZAR TUDO =====================
+function renderAll() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = itens.map((item, idx) => renderRow(item, idx)).join('');
+  updateTotals();
+  updateConfigLabel();
+}
+
+// ===================== TOTAIS =====================
+function updateTotals() {
+  let tot = {
+    custo_unit_sum: 0, custo_total: 0, preco_total: 0,
+    novo_total: 0, novo_lucro_rs: 0, lucro_liq_rs: 0, dasn_rs: 0, custo_op: 0
+  };
+
+  itens.forEach(item => {
+    const c = calcItem(item);
+    const qtd = parseFloat(item.quantidade) || 0;
+    const custo_unit = parseFloat(item.custo_unit) || 0;
+    tot.custo_unit_sum += custo_unit * qtd;
+    tot.custo_total += c.custo_total;
+    tot.preco_total += c.preco_total;
+    tot.novo_total += c.novo_total;
+    tot.novo_lucro_rs += c.novo_lucro_rs;
+    tot.lucro_liq_rs += c.lucro_liq_rs;
+    tot.dasn_rs += c.dasn_rs;
+    tot.custo_op += c.custo_op;
+  });
+
+  const novo_lucro_pct_total = tot.novo_total > 0 ? tot.novo_lucro_rs / tot.novo_total * 100 : 0;
+
+  // Tabela
+  document.getElementById('tot-custo-unit').textContent = fmtBRL(tot.custo_total);
+  document.getElementById('tot-custo-total').textContent = fmtBRL(tot.custo_total);
+  document.getElementById('tot-preco-total').textContent = fmtBRL(tot.preco_total);
+  document.getElementById('tot-novo-total').textContent = fmtBRL(tot.novo_total);
+  document.getElementById('tot-novo-lucro-pct').textContent = fmtPct(novo_lucro_pct_total);
+  document.getElementById('tot-novo-lucro-rs').textContent = fmtBRL(tot.novo_lucro_rs);
+  document.getElementById('tot-lucro-liq-rs').textContent = fmtBRL(tot.lucro_liq_rs);
+  document.getElementById('tot-dasn-rs').textContent = fmtBRL(tot.dasn_rs);
+  document.getElementById('tot-custo-op').textContent = fmtBRL(tot.custo_op);
+
+  // Barra flutuante
+  document.getElementById('ft-custo').textContent = fmtBRL(tot.custo_total);
+  document.getElementById('ft-preco').textContent = fmtBRL(tot.preco_total);
+  document.getElementById('ft-novo').textContent = fmtBRL(tot.novo_total);
+  document.getElementById('ft-pct').textContent = fmtPct(novo_lucro_pct_total);
+  document.getElementById('ft-liq').textContent = fmtBRL(tot.lucro_liq_rs);
+  document.getElementById('ft-dasn').textContent = fmtBRL(tot.dasn_rs);
+  document.getElementById('ft-itens').textContent = itens.length;
+}
+
+// ===================== FORMATAÇÃO BRL INPUT =====================
+function fmtNumInput(v) {
+  // Formata número para exibição no input: ex: 1389,00
+  if (!v && v !== 0) return '';
+  return parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function setFieldBRL(id, field, input) {
+  // Permite digitar números com vírgula (pt-BR)
+  let raw = input.value.replace(/[^\d,]/g, '');
+  // Garante apenas uma vírgula
+  const parts = raw.split(',');
+  if (parts.length > 2) raw = parts[0] + ',' + parts.slice(1).join('');
+  input.value = raw;
+  // Converte para float para cálculo
+  const numVal = parseFloat(raw.replace(',', '.')) || 0;
+  const item = itens.find(i => i.id === id);
+  if (item) {
+    item[field] = numVal;
+    const row = document.getElementById('row-' + id);
+    if (row) {
+      const calc = calcItem(item);
+      const cells = row.cells;
+      cells[7].textContent = fmtBRL(calc.custo_total);
+      cells[8].textContent = fmtBRL(calc.preco_venda_unit);
+      cells[9].textContent = fmtBRL(calc.preco_total);
+      cells[10].textContent = fmtPct(calc.lucro_bruto_pct);
+      cells[12].textContent = fmtBRL(calc.novo_total);
+      const pctClass = calc.novo_lucro_pct >= 5 ? 'calc-novo pct-verde' :
+                       calc.novo_lucro_pct > 0 ? 'calc-novo pct' : 'calc-novo pct-warn';
+      cells[13].className = pctClass;
+      cells[13].textContent = fmtPct(calc.novo_lucro_pct);
+      cells[14].textContent = fmtBRL(calc.novo_lucro_rs);
+      cells[15].textContent = fmtBRL(calc.lucro_liq_rs);
+      cells[16].textContent = fmtBRL(calc.dasn_rs);
+      cells[17].textContent = fmtBRL(calc.custo_op);
+    }
+    updateTotals();
+    markDirty();
+  }
+}
+
+// ===================== AÇÕES =====================
+let nextId = 1;
+
+function addItem() {
+  itens.push({
+    id: nextId++,
+    descricao: '', unidade: 'UND', quantidade: '',
+    fornecedor: '', marca: '', custo_unit: '', novo_lance: ''
+  });
+  renderAll();
+  markDirty();
+  // foca no último input de descrição
+  const rows = document.querySelectorAll('#tbody tr');
+  if (rows.length > 0) {
+    const lastInput = rows[rows.length - 1].querySelector('input[type=text]');
+    if (lastInput) lastInput.focus();
+  }
+}
+
+function removeItem(id) {
+  itens = itens.filter(i => i.id !== id);
+  renderAll();
+  markDirty();
+}
+
+function setField(id, field, value) {
+  const item = itens.find(i => i.id === id);
+  if (item) {
+    item[field] = value;
+    // recalcula só a linha
+    const row = document.getElementById('row-' + id);
+    if (row) {
+      const calc = calcItem(item);
+      const cells = row.cells;
+      // Posições: 0=#, 1=desc, 2=und, 3=qtd, 4=forn, 5=marca, 6=custo_unit (input), 7=custo_total, 8=preco_unit, 9=preco_total, 10=lucro_bruto, 11=novo_lance, 12=novo_total, 13=novo_lucro_pct, 14=novo_lucro_rs, 15=lucro_liq_rs, 16=dasn_rs, 17=custo_op
+      cells[7].textContent = fmtBRL(calc.custo_total);
+      cells[8].textContent = fmtBRL(calc.preco_venda_unit);
+      cells[9].textContent = fmtBRL(calc.preco_total);
+      cells[10].textContent = fmtPct(calc.lucro_bruto_pct);
+      cells[12].textContent = fmtBRL(calc.novo_total);
+      const pctClass = calc.novo_lucro_pct >= 5 ? 'calc-novo pct-verde' :
+                       calc.novo_lucro_pct > 0 ? 'calc-novo pct' : 'calc-novo pct-warn';
+      cells[13].className = pctClass;
+      cells[13].textContent = fmtPct(calc.novo_lucro_pct);
+      cells[14].textContent = fmtBRL(calc.novo_lucro_rs);
+      cells[15].textContent = fmtBRL(calc.lucro_liq_rs);
+      cells[16].textContent = fmtBRL(calc.dasn_rs);
+      cells[17].textContent = fmtBRL(calc.custo_op);
+    }
+    updateTotals();
+    markDirty();
+  }
+}
+
+function recalcAll() {
+  renderAll();
+  updateConfigLabel();
+}
+
+// ===================== SUJO/SALVO =====================
+function markDirty() {
+  dirty = true;
+  document.getElementById('status-label').innerHTML = '&#128992; Não salvo';
+  document.getElementById('status-label').style.color = '#c0392b';
+}
+function markClean() {
+  dirty = false;
+  document.getElementById('status-label').innerHTML = '&#128994; Salvo';
+  document.getElementById('status-label').style.color = '#1e8449';
+}
+
+// ===================== SALVAR =====================
+async function salvar() {
+  const data = buildPayload();
+  try {
+    const r = await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (r.ok) {
+      showToast('Salvo com sucesso!');
+      markClean();
+    } else {
+      showToast('Erro ao salvar!', true);
+    }
+  } catch(e) {
+    showToast('Erro de conexão!', true);
+  }
+}
+
+// ===================== EXPORTAR EXCEL =====================
+async function exportarExcel() {
+  const data = buildPayload();
+  showToast('Gerando Excel...');
+  try {
+    const r = await fetch('/api/export/excel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (r.ok) {
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'composicao_precos.xlsx';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Excel exportado!');
+    } else {
+      const err = await r.json();
+      showToast(err.error || 'Erro ao exportar!', true);
+    }
+  } catch(e) {
+    showToast('Erro ao exportar!', true);
+  }
+}
+
+// ===================== LIMPAR =====================
+function limparTudo() {
+  if (!confirm('Tem certeza que deseja apagar todos os itens?')) return;
+  itens = [];
+  nextId = 1;
+  renderAll();
+  markDirty();
+}
+
+// ===================== PAYLOAD =====================
+function buildPayload() {
+  const c = getConfig();
+  return {
+    titulo: document.getElementById('titulo-input').value,
+    config: c,
+    itens: itens.map(i => ({ ...i }))
+  };
+}
+
+// ===================== CARREGAR =====================
+async function carregar() {
+  try {
+    const r = await fetch('/api/data');
+    const data = await r.json();
+
+    if (data.titulo) {
+      document.getElementById('titulo-input').value = data.titulo;
+    }
+    if (data.config) {
+      document.getElementById('cfg-taxa').value = data.config.taxa ?? '';
+      document.getElementById('cfg-lucro').value = data.config.lucro_liq ?? '';
+      document.getElementById('cfg-dasn').value = data.config.dasn ?? '';
+    }
+    if (data.itens && data.itens.length > 0) {
+      itens = data.itens.map(i => ({ ...i, id: nextId++ }));
+    }
+    renderAll();
+    markClean();
+  } catch(e) {
+    console.error('Erro ao carregar:', e);
+  }
+}
+
+// ===================== TOAST =====================
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = isError ? 'show error' : 'show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.className = ''; }, 2500);
+}
+
+// ===================== ATALHO TECLADO =====================
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    salvar();
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    addItem();
+  }
+});
+
+window.addEventListener('beforeunload', e => {
+  if (dirty) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+// ===================== INIT =====================
+carregar();
+</script>
+</body>
+</html>
