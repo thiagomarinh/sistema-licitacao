@@ -21,11 +21,7 @@
     top: 0;
     z-index: 100;
   }
-  .topbar h1 {
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-  }
+  .topbar h1 { font-size: 17px; font-weight: 700; letter-spacing: 0.5px; }
   .topbar h1 span { color: #7ecbff; }
   .topbar-actions { display: flex; gap: 8px; align-items: center; }
 
@@ -81,10 +77,7 @@
   }
 
   /* TABELA */
-  .table-container {
-    overflow-x: auto;
-    padding: 12px 20px 20px;
-  }
+  .table-container { overflow-x: auto; padding: 12px 20px 20px; }
   table {
     border-collapse: collapse;
     min-width: 1800px;
@@ -144,10 +137,7 @@
     border-radius: 3px;
     transition: border-color 0.15s, background 0.15s;
   }
-  td input:focus {
-    border-color: #2e6da4;
-    background: #eaf3ff;
-  }
+  td input:focus { border-color: #2e6da4; background: #eaf3ff; }
   td input[type=number] { text-align: right; }
   td.input-desc input { min-width: 220px; }
   td.input-text input { min-width: 100px; }
@@ -218,8 +208,56 @@
   .totais-bar .t-val.verde { color: #7ddc8a; }
   .totais-bar .t-val.laranja { color: #ffc67a; }
 
+  /* LISTA DE COMPOSIÇÕES */
+  .composicoes-section {
+    padding: 16px 20px 24px;
+  }
+  .composicoes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .composicoes-header h2 {
+    font-size: 14px;
+    color: #1a3a5c;
+    font-weight: 700;
+  }
+  .lista-item {
+    background: #fff;
+    border: 1px solid #dde4ef;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .lista-item.ativo {
+    border-color: #2e6da4;
+    background: #eaf3ff;
+  }
+  .lista-item-info strong {
+    display: block;
+    font-size: 13px;
+    color: #1a3a5c;
+  }
+  .lista-item-info small { color: #888; font-size: 11px; }
+  .lista-item-actions { display: flex; gap: 6px; }
+  .lista-vazia {
+    text-align: center;
+    color: #aaa;
+    padding: 24px;
+    font-size: 12px;
+    background: #fff;
+    border-radius: 6px;
+    border: 1px dashed #dde4ef;
+  }
+
   @media print {
-    .topbar, .config-bar, .titulo-wrap .btn, .btn-del, .totais-bar { display: none !important; }
+    .topbar, .config-bar, .titulo-wrap .btn, .btn-del, .totais-bar, .composicoes-section { display: none !important; }
     body { background: #fff; }
     .table-container { padding: 0; }
     table { box-shadow: none; }
@@ -232,6 +270,7 @@
 <div class="topbar">
   <h1>Composição de <span>Preços</span> &mdash; Licitação</h1>
   <div class="topbar-actions">
+    <button class="btn btn-light" onclick="novaComposicao()">&#43; Nova</button>
     <button class="btn btn-light" onclick="addItem()">&#43; Adicionar Item</button>
     <button class="btn btn-success" onclick="salvar()">&#128190; Salvar</button>
     <button class="btn btn-warning" onclick="exportarExcel()">&#128196; Exportar Excel</button>
@@ -343,12 +382,24 @@
   </div>
 </div>
 
+<!-- LISTA DE COMPOSIÇÕES SALVAS -->
+<div class="composicoes-section">
+  <div class="composicoes-header">
+    <h2>&#128196; Composições Salvas</h2>
+    <button class="btn btn-light btn-sm" onclick="novaComposicao()">&#43; Nova Composição</button>
+  </div>
+  <div id="lista-composicoes">
+    <div class="lista-vazia">Nenhuma composição salva ainda.</div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
 // ===================== ESTADO =====================
 let itens = [];
 let dirty = false;
+let currentComposicaoId = null;
 
 // ===================== FORMATAÇÃO =====================
 function fmtBRL(v) {
@@ -365,8 +416,14 @@ function fmtNum(v, dec = 2) {
 }
 function parseNum(s) {
   if (!s) return 0;
-  // aceita vírgula como decimal (pt-BR) ou ponto (padrão)
   return parseFloat(String(s).replace(/\./g, '').replace(',', '.')) || 0;
+}
+function formatarData(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  } catch { return iso; }
 }
 
 // ===================== CONFIGURAÇÕES =====================
@@ -480,7 +537,6 @@ function updateTotals() {
 
   const novo_lucro_pct_total = tot.novo_total > 0 ? tot.novo_lucro_rs / tot.novo_total * 100 : 0;
 
-  // Tabela
   document.getElementById('tot-custo-unit').textContent = fmtBRL(tot.custo_total);
   document.getElementById('tot-custo-total').textContent = fmtBRL(tot.custo_total);
   document.getElementById('tot-preco-total').textContent = fmtBRL(tot.preco_total);
@@ -490,7 +546,6 @@ function updateTotals() {
   document.getElementById('tot-dasn-rs').textContent = fmtBRL(tot.dasn_rs);
   document.getElementById('tot-custo-op').textContent = fmtBRL(tot.custo_op);
 
-  // Barra flutuante
   document.getElementById('ft-custo').textContent = fmtBRL(tot.custo_total);
   document.getElementById('ft-preco').textContent = fmtBRL(tot.preco_total);
   document.getElementById('ft-novo').textContent = fmtBRL(tot.novo_total);
@@ -501,19 +556,15 @@ function updateTotals() {
 
 // ===================== FORMATAÇÃO BRL INPUT =====================
 function fmtNumInput(v) {
-  // Formata número para exibição no input: ex: 1389,00
   if (!v && v !== 0) return '';
   return parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function setFieldBRL(id, field, input) {
-  // Permite digitar números com vírgula (pt-BR)
   let raw = input.value.replace(/[^\d,]/g, '');
-  // Garante apenas uma vírgula
   const parts = raw.split(',');
   if (parts.length > 2) raw = parts[0] + ',' + parts.slice(1).join('');
   input.value = raw;
-  // Converte para float para cálculo
   const numVal = parseFloat(raw.replace(',', '.')) || 0;
   const item = itens.find(i => i.id === id);
   if (item) {
@@ -540,7 +591,7 @@ function setFieldBRL(id, field, input) {
   }
 }
 
-// ===================== AÇÕES =====================
+// ===================== AÇÕES DE ITEM =====================
 let nextId = 1;
 
 function addItem() {
@@ -551,7 +602,6 @@ function addItem() {
   });
   renderAll();
   markDirty();
-  // foca no último input de descrição
   const rows = document.querySelectorAll('#tbody tr');
   if (rows.length > 0) {
     const lastInput = rows[rows.length - 1].querySelector('input[type=text]');
@@ -569,12 +619,10 @@ function setField(id, field, value) {
   const item = itens.find(i => i.id === id);
   if (item) {
     item[field] = value;
-    // recalcula só a linha
     const row = document.getElementById('row-' + id);
     if (row) {
       const calc = calcItem(item);
       const cells = row.cells;
-      // Posições: 0=#, 1=desc, 2=und, 3=qtd, 4=forn, 5=marca, 6=custo_unit (input), 7=custo_total, 8=preco_unit, 9=preco_total, 10=lucro_bruto, 11=novo_lance, 12=novo_total, 13=novo_lucro_pct, 14=novo_lucro_rs, 15=lucro_liq_rs, 16=dasn_rs, 17=custo_op
       cells[7].textContent = fmtBRL(calc.custo_total);
       cells[8].textContent = fmtBRL(calc.preco_venda_unit);
       cells[9].textContent = fmtBRL(calc.preco_total);
@@ -613,6 +661,7 @@ function markClean() {
 // ===================== SALVAR =====================
 async function salvar() {
   const data = buildPayload();
+  if (currentComposicaoId) data.id = currentComposicaoId;
   try {
     const r = await fetch('/api/save', {
       method: 'POST',
@@ -620,14 +669,111 @@ async function salvar() {
       body: JSON.stringify(data)
     });
     if (r.ok) {
+      const result = await r.json();
+      currentComposicaoId = result.id;
       showToast('Salvo com sucesso!');
       markClean();
+      await atualizarLista();
     } else {
       showToast('Erro ao salvar!', true);
     }
   } catch(e) {
     showToast('Erro de conexão!', true);
   }
+}
+
+// ===================== LISTA DE COMPOSIÇÕES =====================
+async function atualizarLista() {
+  try {
+    const r = await fetch('/api/composicoes');
+    const composicoes = await r.json();
+    renderLista(composicoes);
+  } catch(e) {}
+}
+
+function renderLista(composicoes) {
+  const el = document.getElementById('lista-composicoes');
+  if (!composicoes || composicoes.length === 0) {
+    el.innerHTML = '<div class="lista-vazia">Nenhuma composição salva ainda. Preencha os dados acima e clique em Salvar.</div>';
+    return;
+  }
+  el.innerHTML = composicoes.map(c => {
+    const ativo = c.id === currentComposicaoId ? 'ativo' : '';
+    const data = formatarData(c.atualizado_em);
+    const nItens = c.num_itens === 1 ? '1 item' : `${c.num_itens} itens`;
+    return `<div class="lista-item ${ativo}" id="lista-${c.id}">
+      <div class="lista-item-info">
+        <strong>${esc(c.titulo)}</strong>
+        <small>${nItens} &bull; Atualizado em ${data}</small>
+      </div>
+      <div class="lista-item-actions">
+        <button class="btn btn-primary btn-sm" onclick="editarComposicao('${c.id}')">&#9998; Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="deletarComposicao('${c.id}')">&#128465;</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function editarComposicao(id) {
+  if (dirty && !confirm('Há alterações não salvas. Deseja continuar sem salvar?')) return;
+  try {
+    const r = await fetch(`/api/composicoes/${id}`);
+    if (!r.ok) { showToast('Erro ao carregar composição!', true); return; }
+    const comp = await r.json();
+    currentComposicaoId = comp.id;
+    document.getElementById('titulo-input').value = comp.titulo || '';
+    if (comp.config) {
+      document.getElementById('cfg-taxa').value = comp.config.taxa ?? '';
+      document.getElementById('cfg-lucro').value = comp.config.lucro_liq ?? '';
+      document.getElementById('cfg-dasn').value = comp.config.dasn ?? '';
+    }
+    itens = (comp.itens || []).map(i => ({ ...i, id: nextId++ }));
+    renderAll();
+    markClean();
+    // Destaca item ativo na lista
+    document.querySelectorAll('.lista-item').forEach(el => el.classList.remove('ativo'));
+    const activeEl = document.getElementById('lista-' + id);
+    if (activeEl) activeEl.classList.add('ativo');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch(e) {
+    showToast('Erro ao carregar composição!', true);
+  }
+}
+
+async function deletarComposicao(id) {
+  if (!confirm('Deseja excluir esta composição permanentemente?')) return;
+  try {
+    const r = await fetch(`/api/composicoes/${id}`, { method: 'DELETE' });
+    if (r.ok) {
+      if (currentComposicaoId === id) {
+        currentComposicaoId = null;
+        itens = [];
+        nextId = 1;
+        document.getElementById('titulo-input').value = 'COMPOSIÇÃO DE PREÇOS - LICITAÇÃO';
+        renderAll();
+        markClean();
+      }
+      await atualizarLista();
+      showToast('Composição excluída!');
+    }
+  } catch(e) {
+    showToast('Erro ao excluir!', true);
+  }
+}
+
+function novaComposicao() {
+  if (dirty && !confirm('Há alterações não salvas. Deseja continuar sem salvar?')) return;
+  itens = [];
+  nextId = 1;
+  currentComposicaoId = null;
+  document.getElementById('titulo-input').value = 'COMPOSIÇÃO DE PREÇOS - LICITAÇÃO';
+  document.getElementById('cfg-taxa').value = '7';
+  document.getElementById('cfg-lucro').value = '9';
+  document.getElementById('cfg-dasn').value = '3';
+  renderAll();
+  markClean();
+  document.querySelectorAll('.lista-item').forEach(el => el.classList.remove('ativo'));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ===================== EXPORTAR EXCEL =====================
@@ -677,25 +823,24 @@ function buildPayload() {
   };
 }
 
-// ===================== CARREGAR =====================
+// ===================== CARREGAR INICIAL =====================
 async function carregar() {
   try {
-    const r = await fetch('/api/data');
-    const data = await r.json();
+    const r = await fetch('/api/composicoes');
+    const composicoes = await r.json();
+    renderLista(composicoes);
 
-    if (data.titulo) {
-      document.getElementById('titulo-input').value = data.titulo;
+    if (composicoes.length > 0) {
+      // Carrega a mais recente automaticamente
+      const maisRecente = composicoes[composicoes.length - 1];
+      await editarComposicao(maisRecente.id);
+    } else {
+      document.getElementById('cfg-taxa').value = '7';
+      document.getElementById('cfg-lucro').value = '9';
+      document.getElementById('cfg-dasn').value = '3';
+      renderAll();
+      markClean();
     }
-    if (data.config) {
-      document.getElementById('cfg-taxa').value = data.config.taxa ?? '';
-      document.getElementById('cfg-lucro').value = data.config.lucro_liq ?? '';
-      document.getElementById('cfg-dasn').value = data.config.dasn ?? '';
-    }
-    if (data.itens && data.itens.length > 0) {
-      itens = data.itens.map(i => ({ ...i, id: nextId++ }));
-    }
-    renderAll();
-    markClean();
   } catch(e) {
     console.error('Erro ao carregar:', e);
   }
@@ -710,7 +855,7 @@ function showToast(msg, isError = false) {
   t._timer = setTimeout(() => { t.className = ''; }, 2500);
 }
 
-// ===================== ATALHO TECLADO =====================
+// ===================== ATALHOS TECLADO =====================
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') {
     e.preventDefault();

@@ -1,0 +1,47 @@
+{
+  "composicoes": [
+    {
+      "id": "4ae9205c-28b0-4779-a250-d50a77d654c6",
+      "titulo": "COMPOSIÇÃO DE PREÇOS - LICITAÇÃO",
+      "config": {
+        "taxa": 10,
+        "lucro_liq": 10,
+        "dasn": 9
+      },
+      "itens": [
+        {
+          "id": 1,
+          "descricao": "",
+          "unidade": "UND",
+          "quantidade": "150",
+          "fornecedor": "",
+          "marca": "",
+          "custo_unit": 150,
+          "novo_lance": "211.27"
+        },
+        {
+          "id": 2,
+          "descricao": "",
+          "unidade": "UND",
+          "quantidade": "200",
+          "fornecedor": "",
+          "marca": "",
+          "custo_unit": 100,
+          "novo_lance": "140.85"
+        },
+        {
+          "id": 3,
+          "descricao": "",
+          "unidade": "UND",
+          "quantidade": "250",
+          "fornecedor": "",
+          "marca": "",
+          "custo_unit": 300,
+          "novo_lance": "422.54"
+        }
+      ],
+      "criado_em": "2026-04-01T10:47:24.313242",
+      "atualizado_em": "2026-04-01T10:47:24.313256"
+    }
+  ]
+}
