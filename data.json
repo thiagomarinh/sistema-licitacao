@@ -2,6 +2,8 @@
   "composicoes": [
     {
       "titulo": "Tracuateua",
+      "num_pregao": "001/2026",
+      "num_processo": "2026.001.000123",
       "config": {
         "taxa": 10,
         "lucro_liq": 10,
@@ -40,7 +42,7 @@
         }
       ],
       "id": "4ae9205c-28b0-4779-a250-d50a77d654c6",
-      "atualizado_em": "2026-04-01T11:31:24.228909",
+      "atualizado_em": "2026-04-01T16:13:11.850308",
       "criado_em": "2026-04-01T10:47:24.313242"
     }
   ]

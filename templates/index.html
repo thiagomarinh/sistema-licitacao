@@ -426,6 +426,73 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
 #toast.show { opacity: 1; transform: translateY(0); }
 #toast.error::before { content: '✕'; color: var(--red); }
 
+/* ── MODAL GERAR ── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  width: 460px;
+  max-width: 95vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.modal-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: 16px; padding: 2px 6px;
+}
+.modal-close:hover { color: var(--red); }
+.modal-sel-all {
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border2);
+  font-size: 12px;
+  color: var(--muted);
+}
+.modal-sel-all label { cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.modal-lista {
+  overflow-y: auto;
+  flex: 1;
+  padding: 8px 0;
+}
+.modal-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: background .1s;
+}
+.modal-item:hover { background: var(--surface2); }
+.modal-item input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; flex-shrink: 0; cursor: pointer; }
+.modal-item-num { font-size: 11px; color: var(--muted); min-width: 24px; font-weight: 600; }
+.modal-item-desc { font-size: 13px; color: var(--text); flex: 1; }
+.modal-item-qtd { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+}
+
 /* ── TOTAIS BAR ── */
 .totais-bar {
   position: sticky;
@@ -599,6 +666,7 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
     <button class="btn btn-ghost" onclick="addItem()">+ Item</button>
     <div class="divider"></div>
     <button class="btn btn-success" onclick="salvar()">💾 Salvar</button>
+    <button class="btn btn-primary" onclick="abrirModalGerar()">📋 Gerar</button>
     <button class="btn btn-warning" onclick="exportarExcel()">📄 Excel</button>
     <button class="btn btn-ghost" onclick="window.print()">🖨️ Imprimir</button>
     <div class="divider"></div>
@@ -731,6 +799,24 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
   </div>
   <div class="lista-grid" id="lista-composicoes">
     <div class="lista-vazia">Nenhuma composição salva ainda.<br>Preencha os dados acima e clique em Salvar.</div>
+  </div>
+</div>
+
+<!-- MODAL SELEÇÃO DE ITENS -->
+<div id="modal-gerar" class="modal-overlay" onclick="fecharModalGerar(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">Selecionar itens para o documento</span>
+      <button class="modal-close" onclick="document.getElementById('modal-gerar').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-sel-all">
+      <label><input type="checkbox" id="chk-todos" onchange="toggleTodosItens(this.checked)"> Selecionar todos</label>
+    </div>
+    <div class="modal-lista" id="modal-lista-itens"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-gerar').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarGerar()">📋 Gerar documento</button>
+    </div>
   </div>
 </div>
 
@@ -1183,6 +1269,238 @@ function aplicarTema(tema) {
 function toggleTema() {
   const atual = document.documentElement.getAttribute('data-theme') || 'dark';
   aplicarTema(atual === 'dark' ? 'light' : 'dark');
+}
+
+// ===================== MODAL SELEÇÃO ITENS =====================
+function abrirModalGerar() {
+  if (itens.length === 0) { showToast('Adicione itens antes de gerar o documento!', true); return; }
+
+  const lista = document.getElementById('modal-lista-itens');
+  lista.innerHTML = itens.map((item, idx) => `
+    <label class="modal-item">
+      <input type="checkbox" class="chk-item" value="${item.id}" checked>
+      <span class="modal-item-num">${idx + 1}</span>
+      <span class="modal-item-desc">${item.descricao || '(sem descrição)'}</span>
+      <span class="modal-item-qtd">${item.quantidade || 0} ${item.unidade || ''}</span>
+    </label>`).join('');
+
+  document.getElementById('chk-todos').checked = true;
+  document.getElementById('modal-gerar').classList.add('open');
+}
+
+function fecharModalGerar(e) {
+  if (e.target === document.getElementById('modal-gerar'))
+    document.getElementById('modal-gerar').classList.remove('open');
+}
+
+function toggleTodosItens(checked) {
+  document.querySelectorAll('.chk-item').forEach(c => c.checked = checked);
+}
+
+function confirmarGerar() {
+  const selecionados = [...document.querySelectorAll('.chk-item:checked')].map(c => parseInt(c.value));
+  if (selecionados.length === 0) { showToast('Selecione ao menos um item!', true); return; }
+  document.getElementById('modal-gerar').classList.remove('open');
+  const itensSelecionados = itens.filter(i => selecionados.includes(i.id));
+  gerarDocumento(itensSelecionados);
+}
+
+// ===================== GERAR DOCUMENTO =====================
+function gerarDocumento(itensSelecionados) {
+  if (!itensSelecionados || itensSelecionados.length === 0) { showToast('Nenhum item selecionado!', true); return; }
+
+  const cfg = getConfig();
+  const numPregao  = document.getElementById('num-pregao').value  || '___/____';
+  const numProcesso = document.getElementById('num-processo').value || '____________';
+
+  // Acumular totais apenas dos itens selecionados
+  let totCustoTotal = 0, totNovoTotal = 0, totLucroLiqRs = 0, totDasnRs = 0, totCustoOp = 0;
+  const calcs = itensSelecionados.map(item => {
+    const c = calcItem(item);
+    totCustoTotal  += c.custo_total;
+    totNovoTotal   += c.novo_total;
+    totLucroLiqRs  += c.lucro_liq_rs;
+    totDasnRs      += c.dasn_rs;
+    totCustoOp     += c.custo_op;
+    return c;
+  });
+
+  const totLucroLiqPct = totNovoTotal > 0 ? (totLucroLiqRs / totNovoTotal * 100) : 0;
+
+  const linhasTabela = itensSelecionados.map((item, idx) => {
+    const c = calcs[idx];
+    const qtd = parseFloat(item.quantidade) || 0;
+    const lance = parseFloat(item.novo_lance) || 0;
+    return `<tr>
+      <td>${idx + 1}</td>
+      <td style="text-align:left;padding-left:6px">${item.descricao || ''}</td>
+      <td>${item.unidade || ''}</td>
+      <td>${qtd % 1 === 0 ? qtd.toFixed(0) : fmtNum(qtd, 3)}</td>
+      <td>${fmtNum(parseFloat(item.custo_unit) || 0, 3)}</td>
+      <td>${fmtNum(c.custo_total, 3)}</td>
+      <td>${fmtNum(lance, 2)}</td>
+      <td>${fmtNum(c.novo_total, 2)}</td>
+      <td>${fmtPct(c.novo_lucro_pct)}</td>
+      <td>${fmtNum(c.lucro_liq_rs, 2)}</td>
+      <td>${fmtNum(c.dasn_rs, 2)}</td>
+      <td>${fmtNum(c.custo_op, 2)}</td>
+    </tr>`;
+  }).join('');
+
+  const legendaItens = itensSelecionados.map((item, idx) =>
+    `<div>CUSTO DE AQUISIÇÃO ITEM ${idx + 1}: R$${fmtNum(parseFloat(item.custo_unit) || 0, 2)}</div>`
+  ).join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Planilha de Composição de Custos</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:Arial,sans-serif;font-size:11px;color:#000;background:#fff}
+  .page{padding:28px 28px 20px;max-width:1050px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+
+  /* Header */
+  .doc-header{display:flex;align-items:center;border-bottom:2px solid #333;padding-bottom:14px;margin-bottom:18px}
+  .logo-area{min-width:160px}
+  .logo-area img{height:60px;width:auto;display:block}
+  .doc-title{flex:1;text-align:center}
+  .doc-title h1{font-size:15px;font-weight:bold;letter-spacing:.5px}
+
+  /* Info pregão */
+  .doc-info{margin-bottom:14px}
+  .doc-info p{font-size:12px;font-weight:600;margin-bottom:2px}
+
+  /* Tabela */
+  table{width:100%;border-collapse:collapse;margin-bottom:18px;font-size:9.5px}
+  table th,table td{border:1px solid #999;padding:4px 4px;text-align:center}
+  table thead tr.h-pct th{background:#c8d4e0;font-size:9px;font-weight:600;color:#444;padding:2px 4px}
+  table thead tr.h-col th{background:#d6dfe9;font-size:9px;font-weight:bold;line-height:1.3}
+  table tbody tr:nth-child(even){background:#f5f7fa}
+  table tfoot td{font-weight:bold;background:#e8ecf2;text-align:center}
+
+  /* Legenda */
+  .legenda{margin-bottom:28px}
+  .legenda h3{font-size:13px;font-weight:bold;margin-bottom:8px}
+  .legenda div{font-size:12px;font-weight:600;margin-bottom:3px}
+
+  /* Assinatura */
+  .assinatura{text-align:center;margin:36px 0 28px}
+  .assinatura .linha{border-top:1px solid #333;width:68%;margin:0 auto 10px}
+  .assinatura p{font-size:12px;font-weight:bold;line-height:1.9}
+
+  /* Footer */
+  .spacer{flex:1}
+  .doc-footer{border-top:4px solid #1a5f7a;padding-top:9px;display:flex;justify-content:space-between;align-items:center;margin-top:auto}
+  .footer-info{font-size:10px;line-height:1.8;color:#333}
+  .footer-logo img{height:44px;width:auto;display:block}
+
+  @media print{
+    body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .page{padding:15px}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="doc-header">
+    <div class="logo-area">
+      <img src="/static/logo.png" alt="Santa Luzia Distribuidora">
+    </div>
+    <div class="doc-title">
+      <h1>PLANILHA DE COMPOSIÇÃO DE CUSTOS</h1>
+    </div>
+  </div>
+
+  <div class="doc-info">
+    <p>PREGÃO ELETRÔNICO ${numPregao}</p>
+    <p>PROCESSO ADMINISTRATIVO ${numProcesso}</p>
+  </div>
+
+  <table>
+    <thead>
+      <tr class="h-pct">
+        <th colspan="10"></th>
+        <th>${fmtNum(cfg.dasn, 2)}%</th>
+        <th>${fmtNum(cfg.taxa, 2)}%</th>
+      </tr>
+      <tr class="h-col">
+        <th>Item</th>
+        <th>DESCRIÇÃO</th>
+        <th>Und</th>
+        <th>Quant</th>
+        <th>CUSTO UNIT.<br>DE AQUISIÇÃO</th>
+        <th>CUSTO TOTAL<br>DE AQUISIÇÃO</th>
+        <th>NOVO LANCE<br>UNITÁRIO</th>
+        <th>NOVO LANCE<br>TOTAL</th>
+        <th>NOVO LUCRO<br>LÍQUIDO</th>
+        <th>LUCRO<br>LÍQUIDO R$</th>
+        <th>DASN</th>
+        <th>CUSTO<br>OPERACIONAL</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${linhasTabela}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="4" style="letter-spacing:2px">T O T A I S</td>
+        <td></td>
+        <td>${fmtNum(totCustoTotal, 3)}</td>
+        <td></td>
+        <td>${fmtNum(totNovoTotal, 2)}</td>
+        <td>${fmtPct(totLucroLiqPct)}</td>
+        <td>${fmtNum(totLucroLiqRs, 2)}</td>
+        <td>${fmtNum(totDasnRs, 2)}</td>
+        <td>${fmtNum(totCustoOp, 2)}</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="legenda">
+    <h3>Legenda</h3>
+    ${legendaItens}
+    <div>VALOR TOTAL: R$${fmtNum(totNovoTotal, 2)}</div>
+    <div>LUCRO LÍQUIDO: R$ ${fmtNum(totLucroLiqRs, 2)} (${fmtPct(totLucroLiqPct)})</div>
+    <div>IMPOSTO(DASN): R$ ${fmtNum(totDasnRs, 2)} (${fmtNum(cfg.dasn, 0)}%)</div>
+    <div>CUSTO OPERACIONAL : R$ ${fmtNum(totCustoOp, 2)} (${fmtNum(cfg.taxa, 0)}%)</div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="assinatura">
+    <div class="linha"></div>
+    <p>
+      SANTA LUZIA DISTRIBUIDORA LTDA<br>
+      CNPJ nº44.919.742/0001-90<br>
+      JOÃO VICTOR MAUES LOPES<br>
+      RG: 7565171 2° VIA
+    </p>
+  </div>
+
+  <div class="doc-footer">
+    <div class="footer-info">
+      CNPJ:44.919.742/0001-90<br>
+      ENDEREÇO: TV. JURANDIR GUIMARÃES, 484 – MOCAJUBA – PA.<br>
+      EMAIL: SANTALUZIADISTRIBUIDORALTDA@GMAIL.COM<br>
+      FONE/WHATSAPP: (91)98124-7782
+    </div>
+    <div class="footer-logo">
+      <img src="/static/logo.png" alt="Santa Luzia Distribuidora">
+    </div>
+  </div>
+
+</div>
+<script>window.onload = () => window.print();<\/script>
+</body>
+</html>`;
+
+  const w = window.open('', '_blank');
+  if (!w) { showToast('Permita popups para gerar o documento!', true); return; }
+  w.document.write(html);
+  w.document.close();
 }
 
 // Aplica tema salvo ou escuro por padrão
