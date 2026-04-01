@@ -1,8 +1,7 @@
 {
   "composicoes": [
     {
-      "id": "4ae9205c-28b0-4779-a250-d50a77d654c6",
-      "titulo": "COMPOSIÇÃO DE PREÇOS - LICITAÇÃO",
+      "titulo": "Tracuateua",
       "config": {
         "taxa": 10,
         "lucro_liq": 10,
@@ -10,38 +9,39 @@
       },
       "itens": [
         {
-          "id": 1,
-          "descricao": "",
-          "unidade": "UND",
-          "quantidade": "150",
-          "fornecedor": "",
-          "marca": "",
           "custo_unit": 150,
-          "novo_lance": "211.27"
+          "descricao": "monitor 19.2 polegadas",
+          "fornecedor": "Brazil pc",
+          "id": 1,
+          "marca": "brazil pc",
+          "novo_lance": "211.27",
+          "quantidade": "150",
+          "unidade": "UND"
         },
         {
-          "id": 2,
-          "descricao": "",
-          "unidade": "UND",
-          "quantidade": "200",
-          "fornecedor": "",
-          "marca": "",
           "custo_unit": 100,
-          "novo_lance": "140.85"
+          "descricao": "nobreak 3000 va",
+          "fornecedor": "Ragtech",
+          "id": 2,
+          "marca": "Ragtech",
+          "novo_lance": "140.85",
+          "quantidade": "200",
+          "unidade": "UND"
         },
         {
-          "id": 3,
-          "descricao": "",
-          "unidade": "UND",
-          "quantidade": "250",
-          "fornecedor": "",
-          "marca": "",
           "custo_unit": 300,
-          "novo_lance": "422.54"
+          "descricao": "notebook i7",
+          "fornecedor": "Fujioka",
+          "id": 3,
+          "marca": "lenovo",
+          "novo_lance": "422.54",
+          "quantidade": "250",
+          "unidade": "UND"
         }
       ],
-      "criado_em": "2026-04-01T10:47:24.313242",
-      "atualizado_em": "2026-04-01T10:47:24.313256"
+      "id": "4ae9205c-28b0-4779-a250-d50a77d654c6",
+      "atualizado_em": "2026-04-01T11:31:24.228909",
+      "criado_em": "2026-04-01T10:47:24.313242"
     }
   ]
 }

@@ -178,6 +178,50 @@ body {
   background: var(--surface);
 }
 
+.pregao-section {
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.pregao-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 5px 12px;
+}
+
+.pregao-item label {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pregao-item input[type=text] {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border2);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 500;
+  outline: none;
+  width: 180px;
+  padding: 2px 4px;
+  transition: border-color 0.15s;
+}
+.pregao-item input[type=text]:focus { border-bottom-color: var(--accent); }
+
 .titulo-group {
   display: flex;
   align-items: center;
@@ -593,6 +637,18 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
   </span>
 </div>
 
+<!-- PREGÃO / PROCESSO -->
+<div class="pregao-section">
+  <div class="pregao-item">
+    <label for="num-pregao">Nº DO PREGÃO</label>
+    <input type="text" id="num-pregao" placeholder="Ex: 001/2026" oninput="markDirty()">
+  </div>
+  <div class="pregao-item">
+    <label for="num-processo">Nº DO PROCESSO</label>
+    <input type="text" id="num-processo" placeholder="Ex: 2026.001.000123" oninput="markDirty()">
+  </div>
+</div>
+
 <!-- TABELA -->
 <div class="table-container">
 <table id="tabela">
@@ -991,6 +1047,8 @@ async function editarComposicao(id) {
     const comp = await r.json();
     currentComposicaoId = comp.id;
     document.getElementById('titulo-input').value = comp.titulo || '';
+    document.getElementById('num-pregao').value   = comp.num_pregao  || '';
+    document.getElementById('num-processo').value = comp.num_processo || '';
     if (comp.config) {
       document.getElementById('cfg-taxa').value   = comp.config.taxa ?? '';
       document.getElementById('cfg-lucro').value  = comp.config.lucro_liq ?? '';
@@ -1015,6 +1073,8 @@ async function deletarComposicao(id) {
         currentComposicaoId = null;
         itens = []; nextId = 1;
         document.getElementById('titulo-input').value = 'COMPOSIÇÃO DE PREÇOS - LICITAÇÃO';
+        document.getElementById('num-pregao').value   = '';
+        document.getElementById('num-processo').value = '';
         renderAll(); markClean();
       }
       await atualizarLista();
@@ -1028,6 +1088,8 @@ function novaComposicao() {
   itens = []; nextId = 1;
   currentComposicaoId = null;
   document.getElementById('titulo-input').value = 'COMPOSIÇÃO DE PREÇOS - LICITAÇÃO';
+  document.getElementById('num-pregao').value   = '';
+  document.getElementById('num-processo').value = '';
   document.getElementById('cfg-taxa').value  = '7';
   document.getElementById('cfg-lucro').value = '9';
   document.getElementById('cfg-dasn').value  = '3';
@@ -1070,6 +1132,8 @@ function limparTudo() {
 function buildPayload() {
   return {
     titulo: document.getElementById('titulo-input').value,
+    num_pregao: document.getElementById('num-pregao').value,
+    num_processo: document.getElementById('num-processo').value,
     config: getConfig(),
     itens: itens.map(i => ({ ...i }))
   };
