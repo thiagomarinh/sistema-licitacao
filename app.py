@@ -7,6 +7,7 @@ from routes.main import main_bp
 from routes.api import api_bp
 from routes.export import export_bp
 from routes.auth import auth_bp
+from routes.documentos import docs_bp
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -28,6 +29,7 @@ app.register_blueprint(main_bp)
 app.register_blueprint(api_bp)
 app.register_blueprint(export_bp)
 app.register_blueprint(auth_bp)
+app.register_blueprint(docs_bp)
 
 with app.app_context():
     db.create_all()

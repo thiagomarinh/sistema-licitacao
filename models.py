@@ -1,6 +1,6 @@
 import uuid
 import json
-from datetime import datetime
+from datetime import datetime, date
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -25,6 +25,7 @@ class Empresa(UserMixin, db.Model):
     criado_em    = db.Column(db.DateTime, default=datetime.utcnow)
 
     composicoes  = db.relationship('Composicao', backref='empresa', lazy=True, cascade='all, delete-orphan')
+    documentos   = db.relationship('Documento',  backref='empresa', lazy=True, cascade='all, delete-orphan')
 
     def set_senha(self, senha):
         self.senha_hash = generate_password_hash(senha)
@@ -63,3 +64,35 @@ class Composicao(db.Model):
             'criado_em':    self.criado_em.isoformat() if self.criado_em else '',
             'atualizado_em':self.atualizado_em.isoformat() if self.atualizado_em else '',
         }
+
+
+class Documento(db.Model):
+    __tablename__ = 'documentos'
+
+    id               = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    empresa_id       = db.Column(db.String(36), db.ForeignKey('empresas.id'), nullable=False)
+    nome             = db.Column(db.String(300), nullable=False)
+    categoria        = db.Column(db.String(100))
+    arquivo_path     = db.Column(db.String(500))
+    arquivo_nome     = db.Column(db.String(300))
+    data_vencimento  = db.Column(db.Date)
+    criado_em        = db.Column(db.DateTime, default=datetime.utcnow)
+    atualizado_em    = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    @property
+    def status(self):
+        if not self.data_vencimento:
+            return 'sem_vencimento'
+        hoje = date.today()
+        diff = (self.data_vencimento - hoje).days
+        if diff < 0:
+            return 'vencido'
+        elif diff <= 30:
+            return 'vence_em_breve'
+        return 'valido'
+
+    @property
+    def dias_para_vencer(self):
+        if not self.data_vencimento:
+            return None
+        return (self.data_vencimento - date.today()).days
