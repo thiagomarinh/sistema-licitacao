@@ -339,9 +339,34 @@ body {
 }
 
 /* ── TABELA ── */
+.table-toolbar {
+  padding: 8px 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.btn-add-item {
+  border: 1px dashed var(--border2);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius);
+}
+.btn-add-item:hover { background: var(--accent-dim); border-color: var(--accent); }
+.btn-limpar-itens {
+  border: 1px dashed var(--border2);
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius);
+}
+.btn-limpar-itens:hover { background: var(--red-dim); border-color: var(--red); }
+
 .table-container {
   overflow-x: auto;
-  padding: 16px 20px;
+  padding: 8px 20px 16px;
 }
 
 table {
@@ -685,15 +710,10 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
     <h1>Composição de <span>Preços</span> — Licitação</h1>
   </div>
   <div class="topbar-actions">
-    <button class="btn btn-ghost" onclick="novaComposicao()">+ Nova</button>
-    <button class="btn btn-ghost" onclick="addItem()">+ Item</button>
-    <div class="divider"></div>
     <button class="btn btn-success" onclick="salvar()">💾 Salvar</button>
     <button class="btn btn-primary" onclick="abrirModalGerar()">📋 Gerar</button>
     <button class="btn btn-warning" onclick="exportarExcel()">📄 Excel</button>
     <button class="btn btn-ghost" onclick="window.print()">🖨️ Imprimir</button>
-    <div class="divider"></div>
-    <button class="btn btn-danger btn-sm" onclick="limparTudo()" title="Limpar itens">🗑️</button>
     <div class="divider"></div>
     <button class="btn btn-ghost btn-sm" id="btn-tema" onclick="toggleTema()" title="Alternar tema"></button>
     <div class="divider"></div>
@@ -746,6 +766,10 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
 </div>
 
 <!-- TABELA -->
+<div class="table-toolbar">
+  <button class="btn btn-ghost btn-add-item" onclick="addItem()">+ Adicionar Item</button>
+  <button class="btn btn-ghost btn-limpar-itens" onclick="limparTudo()" title="Limpar todos os itens">🗑️ Limpar Itens</button>
+</div>
 <div class="table-container">
 <table id="tabela">
   <thead>
