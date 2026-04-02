@@ -1,0 +1,29 @@
+{
+  "composicoes": [
+    {
+      "titulo": "COMPOSIÇÃO DE PREÇOS - LICITAÇÃO",
+      "num_pregao": "",
+      "num_processo": "",
+      "config": {
+        "taxa": 7,
+        "lucro_liq": 9,
+        "dasn": 3
+      },
+      "itens": [
+        {
+          "id": 1,
+          "descricao": "teste",
+          "unidade": "UND",
+          "quantidade": "150",
+          "fornecedor": "ddd",
+          "marca": "ddd",
+          "custo_unit": 150,
+          "novo_lance": "185.19"
+        }
+      ],
+      "id": "8fe7c28b-d204-414d-abb2-3a40b648b103",
+      "criado_em": "2026-04-02T10:43:45.995087",
+      "atualizado_em": "2026-04-02T10:43:45.995087"
+    }
+  ]
+}

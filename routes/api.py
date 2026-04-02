@@ -6,7 +6,8 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 @api_bp.route('/composicoes', methods=['GET'])
 def listar():
-    composicoes = load_all()
+    empresa = request.args.get('empresa', 'santaluzia')
+    composicoes = load_all(empresa)
     summary = [
         {
             'id': c['id'],
@@ -21,7 +22,8 @@ def listar():
 
 @api_bp.route('/composicoes/<comp_id>', methods=['GET'])
 def carregar(comp_id):
-    comp = get_composicao(comp_id)
+    empresa = request.args.get('empresa', 'santaluzia')
+    comp = get_composicao(comp_id, empresa)
     if not comp:
         return jsonify({'error': 'Não encontrado'}), 404
     return jsonify(comp)
@@ -29,12 +31,14 @@ def carregar(comp_id):
 
 @api_bp.route('/composicoes/<comp_id>', methods=['DELETE'])
 def deletar(comp_id):
-    delete_composicao(comp_id)
+    empresa = request.args.get('empresa', 'santaluzia')
+    delete_composicao(comp_id, empresa)
     return jsonify({'status': 'ok'})
 
 
 @api_bp.route('/save', methods=['POST'])
 def save():
     data = request.get_json()
-    saved = save_composicao(data)
+    empresa = data.pop('empresa', 'santaluzia')
+    saved = save_composicao(data, empresa)
     return jsonify({'status': 'ok', 'id': saved['id']})

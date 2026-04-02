@@ -1,6 +1,11 @@
 import os
 
-DATA_FILE = os.path.join(os.path.dirname(__file__), 'data.json')
+BASE_DIR = os.path.dirname(__file__)
+
+DATA_FILES = {
+    'santaluzia':  os.path.join(BASE_DIR, 'data_santaluzia.json'),
+    'sabbaeletro': os.path.join(BASE_DIR, 'data_sabbaeletro.json'),
+}
 
 DEFAULT_DATA = {
     "composicoes": []
