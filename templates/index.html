@@ -420,7 +420,8 @@ tbody tr:last-child td { border-bottom: none; }
 
 td.num  { text-align: right; }
 td.ctr  { text-align: center; }
-td.seq  { text-align: center; color: var(--muted); font-size: 11px; min-width: 32px; }
+td.seq  { text-align: center; min-width: 36px; max-width: 36px; padding: 0 2px; }
+td.seq input { text-align: center; color: var(--muted); font-size: 11px; width: 100%; font-weight: 600; padding: 2px 2px; }
 
 /* INPUTS NA TABELA */
 td input[type=text], td input[type=number] {
@@ -774,7 +775,7 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
 <table id="tabela">
   <thead>
     <tr class="h1">
-      <th>#</th>
+      <th>ITEM</th>
       <th>DESCRIÇÃO</th>
       <th>UND</th>
       <th>QUANT</th>
@@ -981,7 +982,7 @@ function renderRow(item, idx) {
                    calc.novo_lucro_pct > 0 ? 'calc-novo pct' : 'calc-novo pct-warn';
 
   return `<tr id="row-${item.id}" data-id="${item.id}">
-    <td class="seq">${idx + 1}</td>
+    <td class="seq"><input type="number" value="${item.num_item ?? idx + 1}" min="1" step="1" oninput="setField(${item.id},'num_item',+this.value)"></td>
     <td class="input-desc"><input type="text" value="${esc(item.descricao)}" placeholder="Descrição do produto..." oninput="setField(${item.id},'descricao',this.value)"></td>
     <td class="input-text" style="max-width:60px"><input type="text" value="${esc(item.unidade)}" placeholder="UND" oninput="setField(${item.id},'unidade',this.value)"></td>
     <td style="max-width:70px"><input type="number" value="${item.quantidade||''}" placeholder="0" min="0" step="any" oninput="setField(${item.id},'quantidade',this.value)"></td>
@@ -1092,7 +1093,7 @@ function setFieldBRL(id, field, input) {
 let nextId = 1;
 
 function addItem() {
-  itens.push({ id: nextId++, descricao: '', unidade: 'UND', quantidade: '', fornecedor: '', marca: '', custo_unit: '', novo_lance: '' });
+  itens.push({ id: nextId++, num_item: itens.length + 1, descricao: '', unidade: 'UND', quantidade: '', fornecedor: '', marca: '', custo_unit: '', novo_lance: '' });
   renderAll();
   markDirty();
   const rows = document.querySelectorAll('#tbody tr');
