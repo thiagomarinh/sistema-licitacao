@@ -1,0 +1,65 @@
+import uuid
+import json
+from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+
+db = SQLAlchemy()
+
+
+class Empresa(UserMixin, db.Model):
+    __tablename__ = 'empresas'
+
+    id           = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    nome         = db.Column(db.String(200), nullable=False)
+    email        = db.Column(db.String(200), unique=True, nullable=False)
+    senha_hash   = db.Column(db.String(256), nullable=False)
+    cnpj         = db.Column(db.String(20))
+    responsavel  = db.Column(db.String(200))
+    documento    = db.Column(db.String(30))   # CPF ou RG do responsável
+    endereco     = db.Column(db.String(300))
+    telefone     = db.Column(db.String(30))
+    site         = db.Column(db.String(200))
+    logo_path    = db.Column(db.String(300))  # caminho relativo em static/logos/
+    criado_em    = db.Column(db.DateTime, default=datetime.utcnow)
+
+    composicoes  = db.relationship('Composicao', backref='empresa', lazy=True, cascade='all, delete-orphan')
+
+    def set_senha(self, senha):
+        self.senha_hash = generate_password_hash(senha)
+
+    def check_senha(self, senha):
+        return check_password_hash(self.senha_hash, senha)
+
+
+class Composicao(db.Model):
+    __tablename__ = 'composicoes'
+
+    id           = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    empresa_id   = db.Column(db.String(36), db.ForeignKey('empresas.id'), nullable=False)
+    titulo       = db.Column(db.String(300), default='COMPOSIÇÃO DE PREÇOS - LICITAÇÃO')
+    num_pregao   = db.Column(db.String(100))
+    num_processo = db.Column(db.String(100))
+    config_json  = db.Column(db.Text, default='{}')
+    itens_json   = db.Column(db.Text, default='[]')
+    criado_em    = db.Column(db.DateTime, default=datetime.utcnow)
+    atualizado_em= db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def get_config(self):
+        return json.loads(self.config_json or '{}')
+
+    def get_itens(self):
+        return json.loads(self.itens_json or '[]')
+
+    def to_dict(self):
+        return {
+            'id':           self.id,
+            'titulo':       self.titulo,
+            'num_pregao':   self.num_pregao,
+            'num_processo': self.num_processo,
+            'config':       self.get_config(),
+            'itens':        self.get_itens(),
+            'criado_em':    self.criado_em.isoformat() if self.criado_em else '',
+            'atualizado_em':self.atualizado_em.isoformat() if self.atualizado_em else '',
+        }

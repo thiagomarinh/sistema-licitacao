@@ -718,10 +718,9 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
     <div class="divider"></div>
     <button class="btn btn-ghost btn-sm" id="btn-tema" onclick="toggleTema()" title="Alternar tema"></button>
     <div class="divider"></div>
-    <div class="empresa-toggle">
-      <button class="btn-emp" id="btn-emp-santaluzia" onclick="trocarEmpresa('santaluzia')">Santa Luzia</button>
-      <button class="btn-emp" id="btn-emp-sabbaeletro" onclick="trocarEmpresa('sabbaeletro')">Sabbaeletro</button>
-    </div>
+    <span id="nome-empresa" style="font-size:12px;font-weight:600;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    <a href="/configuracoes" class="btn btn-ghost btn-sm" style="text-decoration:none" title="Configurações">⚙️</a>
+    <a href="/logout" class="btn btn-ghost btn-sm" style="text-decoration:none">Sair</a>
   </div>
 </div>
 
@@ -880,27 +879,17 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
 let itens = [];
 let dirty = false;
 let currentComposicaoId = null;
-let empresa_ativa = localStorage.getItem('empresa_ativa') || 'santaluzia';
+let empresaInfo = {};
 
 // ===================== EMPRESA =====================
-function trocarEmpresa(empresa) {
-  if (empresa === empresa_ativa) return;
-  if (dirty && !confirm('Há alterações não salvas. Deseja trocar de empresa sem salvar?')) return;
-  empresa_ativa = empresa;
-  localStorage.setItem('empresa_ativa', empresa);
-  atualizarBotoesEmpresa();
-  itens = []; nextId = 1;
-  currentComposicaoId = null;
-  document.getElementById('titulo-input').value = 'COMPOSIÇÃO DE PREÇOS - LICITAÇÃO';
-  document.getElementById('num-pregao').value   = '';
-  document.getElementById('num-processo').value = '';
-  renderAll(); markClean();
-  carregar();
-}
-
-function atualizarBotoesEmpresa() {
-  document.getElementById('btn-emp-santaluzia').classList.toggle('ativo', empresa_ativa === 'santaluzia');
-  document.getElementById('btn-emp-sabbaeletro').classList.toggle('ativo', empresa_ativa === 'sabbaeletro');
+async function carregarEmpresaInfo() {
+  try {
+    const r = await fetch('/api/empresa/info');
+    if (r.ok) {
+      empresaInfo = await r.json();
+      document.getElementById('nome-empresa').textContent = empresaInfo.nome || '';
+    }
+  } catch(e) {}
 }
 
 // ===================== FORMATAÇÃO =====================
@@ -1172,7 +1161,7 @@ async function salvar() {
 // ===================== LISTA =====================
 async function atualizarLista() {
   try {
-    const r = await fetch(`/api/composicoes?empresa=${empresa_ativa}`);
+    const r = await fetch('/api/composicoes');
     renderLista(await r.json());
   } catch(e) {}
 }
@@ -1203,7 +1192,7 @@ function renderLista(composicoes) {
 async function editarComposicao(id) {
   if (dirty && !confirm('Há alterações não salvas. Deseja continuar sem salvar?')) return;
   try {
-    const r = await fetch(`/api/composicoes/${id}?empresa=${empresa_ativa}`);
+    const r = await fetch(`/api/composicoes/${id}`);
     if (!r.ok) { showToast('Erro ao carregar!', true); return; }
     const comp = await r.json();
     currentComposicaoId = comp.id;
@@ -1228,7 +1217,7 @@ async function editarComposicao(id) {
 async function deletarComposicao(id) {
   if (!confirm('Deseja excluir esta composição permanentemente?')) return;
   try {
-    const r = await fetch(`/api/composicoes/${id}?empresa=${empresa_ativa}`, { method: 'DELETE' });
+    const r = await fetch(`/api/composicoes/${id}`, { method: 'DELETE' });
     if (r.ok) {
       if (currentComposicaoId === id) {
         currentComposicaoId = null;
@@ -1296,15 +1285,14 @@ function buildPayload() {
     num_pregao: document.getElementById('num-pregao').value,
     num_processo: document.getElementById('num-processo').value,
     config: getConfig(),
-    itens: itens.map(i => ({ ...i })),
-    empresa: empresa_ativa
+    itens: itens.map(i => ({ ...i }))
   };
 }
 
 // ===================== CARREGAR =====================
 async function carregar() {
   try {
-    const r = await fetch(`/api/composicoes?empresa=${empresa_ativa}`);
+    const r = await fetch('/api/composicoes');
     const composicoes = await r.json();
     renderLista(composicoes);
     if (composicoes.length > 0) {
@@ -1427,20 +1415,26 @@ function gerarDocumento(itensSelecionados) {
     `<div>CUSTO DE AQUISIÇÃO ITEM ${idx + 1}: R$${fmtNum(parseFloat(item.custo_unit) || 0, 2)}</div>`
   ).join('');
 
-  const isSabba = empresa_ativa === 'sabbaeletro';
+  const logoUrl   = empresaInfo.logo_path ? `/static/${empresaInfo.logo_path}` : '';
+  const nomeEmp   = (empresaInfo.nome || '').toUpperCase();
+  const cnpj      = empresaInfo.cnpj      || '';
+  const resp      = empresaInfo.responsavel || '';
+  const doc       = empresaInfo.documento  || '';
+  const endereco  = empresaInfo.endereco   || '';
+  const telefone  = empresaInfo.telefone   || '';
+  const site      = empresaInfo.site       || '';
 
-  const empresaConfig = isSabba ? {
-    logo:       '/static/logo-sabba.png',
-    logoAlt:    'Sabbaeletro',
-    nomeTabela: 'SABBAELETRO',
-    assinatura: `E. J. SABA LOPES LTDA<br>CNPJ nº 37.357.831/0001-25<br>EYDER JONDERSON SABA LOPES.<br>CPF: 709.005.232-04`,
-    footerInfo: `CNPJ: 37.357.831/0001-25<br>E-mail: comercial@sabbaeletro.com.br<br>Endereço: Tv. Alferes Costa, 1680 – Belém – PA<br>Site: www.sabbaeletro.com.br`,
-  } : {
-    logo:       '/static/logo.png',
-    logoAlt:    'Santa Luzia Distribuidora',
-    nomeTabela: 'SANTA LUZIA DISTRIBUIDORA',
-    assinatura: `SANTA LUZIA DISTRIBUIDORA LTDA<br>CNPJ nº44.919.742/0001-90<br>JOÃO VICTOR MAUES LOPES<br>RG: 7565171 2° VIA`,
-    footerInfo: `CNPJ:44.919.742/0001-90<br>ENDEREÇO: TV. JURANDIR GUIMARÃES, 484 – MOCAJUBA – PA.<br>EMAIL: SANTALUZIADISTRIBUIDORALTDA@GMAIL.COM<br>FONE/WHATSAPP: (91)98124-7782`,
+  const empresaConfig = {
+    logo:       logoUrl,
+    logoAlt:    empresaInfo.nome || '',
+    nomeTabela: nomeEmp,
+    assinatura: `${nomeEmp}<br>CNPJ nº ${cnpj}<br>${resp}<br>${doc}`,
+    footerInfo: [
+      cnpj      ? `CNPJ: ${cnpj}`         : '',
+      endereco  ? `Endereço: ${endereco}`  : '',
+      telefone  ? `Tel: ${telefone}`       : '',
+      site      ? `Site: ${site}`          : '',
+    ].filter(Boolean).join('<br>'),
   };
 
   const html = `<!DOCTYPE html>
@@ -1593,9 +1587,7 @@ function gerarDocumento(itensSelecionados) {
 // Aplica tema salvo ou escuro por padrão
 aplicarTema(localStorage.getItem('tema') || 'dark');
 
-// Aplica empresa salva
-atualizarBotoesEmpresa();
-
+carregarEmpresaInfo();
 carregar();
 </script>
 </body>

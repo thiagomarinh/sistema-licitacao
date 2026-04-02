@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — Composição de Preços</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0D1117;
+    color: #E6EDF3;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 12px;
+    padding: 40px;
+    width: 100%;
+    max-width: 400px;
+  }
+  .logo {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .logo h1 { font-size: 20px; font-weight: 700; color: #E6EDF3; }
+  .logo p { font-size: 13px; color: #8B949E; margin-top: 4px; }
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: 12px; font-weight: 600; color: #8B949E; margin-bottom: 6px; }
+  input {
+    width: 100%;
+    background: #0D1117;
+    border: 1px solid #30363D;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #E6EDF3;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input:focus { border-color: #58A6FF; }
+  .btn {
+    width: 100%;
+    padding: 11px;
+    background: #1F6FEB;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    font-family: inherit;
+    transition: background .15s;
+  }
+  .btn:hover { background: #388BFD; }
+  .link { text-align: center; margin-top: 20px; font-size: 13px; color: #8B949E; }
+  .link a { color: #58A6FF; text-decoration: none; }
+  .link a:hover { text-decoration: underline; }
+  .flash {
+    background: #F8514922;
+    border: 1px solid #F85149;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #F85149;
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <h1>📊 Composição de Preços</h1>
+    <p>Faça login para continuar</p>
+  </div>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="flash">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST">
+    <div class="form-group">
+      <label>E-mail</label>
+      <input type="email" name="email" placeholder="seu@email.com" required autofocus>
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" name="senha" placeholder="••••••••" required>
+    </div>
+    <button type="submit" class="btn">Entrar</button>
+  </form>
+
+  <div class="link">
+    Não tem conta? <a href="{{ url_for('auth.cadastro') }}">Cadastre-se</a>
+  </div>
+</div>
+</body>
+</html>

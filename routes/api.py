@@ -1,44 +1,84 @@
+import json
+from datetime import datetime
 from flask import Blueprint, request, jsonify
-from services.data_service import load_all, get_composicao, save_composicao, delete_composicao
+from flask_login import login_required, current_user
+from models import db, Composicao
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 
 @api_bp.route('/composicoes', methods=['GET'])
+@login_required
 def listar():
-    empresa = request.args.get('empresa', 'santaluzia')
-    composicoes = load_all(empresa)
-    summary = [
+    composicoes = Composicao.query.filter_by(empresa_id=current_user.id)\
+                                  .order_by(Composicao.atualizado_em.desc()).all()
+    return jsonify([
         {
-            'id': c['id'],
-            'titulo': c['titulo'],
-            'num_itens': len(c.get('itens', [])),
-            'atualizado_em': c.get('atualizado_em', ''),
+            'id':           c.id,
+            'titulo':       c.titulo,
+            'num_itens':    len(c.get_itens()),
+            'atualizado_em':c.atualizado_em.isoformat() if c.atualizado_em else '',
         }
         for c in composicoes
-    ]
-    return jsonify(summary)
+    ])
 
 
 @api_bp.route('/composicoes/<comp_id>', methods=['GET'])
+@login_required
 def carregar(comp_id):
-    empresa = request.args.get('empresa', 'santaluzia')
-    comp = get_composicao(comp_id, empresa)
-    if not comp:
+    c = Composicao.query.filter_by(id=comp_id, empresa_id=current_user.id).first()
+    if not c:
         return jsonify({'error': 'Não encontrado'}), 404
-    return jsonify(comp)
+    return jsonify(c.to_dict())
 
 
 @api_bp.route('/composicoes/<comp_id>', methods=['DELETE'])
+@login_required
 def deletar(comp_id):
-    empresa = request.args.get('empresa', 'santaluzia')
-    delete_composicao(comp_id, empresa)
+    c = Composicao.query.filter_by(id=comp_id, empresa_id=current_user.id).first()
+    if c:
+        db.session.delete(c)
+        db.session.commit()
     return jsonify({'status': 'ok'})
 
 
 @api_bp.route('/save', methods=['POST'])
+@login_required
 def save():
     data = request.get_json()
-    empresa = data.pop('empresa', 'santaluzia')
-    saved = save_composicao(data, empresa)
-    return jsonify({'status': 'ok', 'id': saved['id']})
+    comp_id = data.get('id')
+
+    if comp_id:
+        c = Composicao.query.filter_by(id=comp_id, empresa_id=current_user.id).first()
+    else:
+        c = None
+
+    if not c:
+        c = Composicao(empresa_id=current_user.id)
+        db.session.add(c)
+
+    c.titulo       = data.get('titulo', '')
+    c.num_pregao   = data.get('num_pregao', '')
+    c.num_processo = data.get('num_processo', '')
+    c.config_json  = json.dumps(data.get('config', {}), ensure_ascii=False)
+    c.itens_json   = json.dumps(data.get('itens', []), ensure_ascii=False)
+    c.atualizado_em = datetime.utcnow()
+
+    db.session.commit()
+    return jsonify({'status': 'ok', 'id': c.id})
+
+
+@api_bp.route('/empresa/info', methods=['GET'])
+@login_required
+def empresa_info():
+    e = current_user
+    return jsonify({
+        'nome':        e.nome,
+        'cnpj':        e.cnpj,
+        'responsavel': e.responsavel,
+        'documento':   e.documento,
+        'endereco':    e.endereco,
+        'telefone':    e.telefone,
+        'site':        e.site,
+        'logo_path':   e.logo_path,
+    })

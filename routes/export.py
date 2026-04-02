@@ -1,10 +1,12 @@
 from flask import Blueprint, request, jsonify, send_file
+from flask_login import login_required
 from services.excel_service import gerar_excel
 
 export_bp = Blueprint('export', __name__, url_prefix='/api/export')
 
 
 @export_bp.route('/excel', methods=['POST'])
+@login_required
 def export_excel():
     try:
         data = request.get_json()
