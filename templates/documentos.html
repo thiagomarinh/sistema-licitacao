@@ -126,6 +126,33 @@
     background: var(--surface); border: 1px dashed var(--border); border-radius: 12px;
   }
   .vazio p { font-size: 14px; margin-top: 10px; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: #0008;
+    z-index: 200; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px; width: 100%; max-width: 520px; box-shadow: 0 8px 32px #0006;
+  }
+  .modal h3 { font-size: 14px; font-weight: 700; margin-bottom: 18px; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .modal-grid .full { grid-column: 1 / -1; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+  .btn-cancel {
+    padding: 7px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 600;
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    cursor: pointer; font-family: inherit; transition: all .15s;
+  }
+  .btn-cancel:hover { color: var(--text); border-color: var(--border2); }
+  .btn-save {
+    padding: 7px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 600;
+    border: none; background: var(--accent); color: #fff;
+    cursor: pointer; font-family: inherit; transition: background .15s;
+  }
+  .btn-save:hover { background: #388BFD; }
 </style>
 </head>
 <body>
@@ -237,6 +264,7 @@
             {% if doc.arquivo_path %}
               <a href="/documentos/download/{{ doc.id }}" class="btn-action">⬇ Baixar</a>
             {% endif %}
+            <button class="btn-action" onclick="abrirModal('{{ doc.id }}', '{{ doc.nome|replace("'","\\'") }}', '{{ doc.categoria or "" }}', '{{ doc.data_vencimento.strftime("%Y-%m-%d") if doc.data_vencimento else "" }}')">✏ Editar</button>
             <form method="POST" action="/documentos/deletar/{{ doc.id }}" style="display:inline"
                   onsubmit="return confirm('Excluir este documento?')">
               <button type="submit" class="btn-action danger">🗑</button>
@@ -253,5 +281,61 @@
   </div>
 
 </div>
+
+<!-- MODAL EDITAR -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>✏ Editar documento</h3>
+    <form id="formEditar" method="POST" enctype="multipart/form-data">
+      <div class="modal-grid">
+        <div class="field full">
+          <label>Nome do documento</label>
+          <input type="text" name="nome" id="editNome" required>
+        </div>
+        <div class="field">
+          <label>Categoria</label>
+          <select name="categoria" id="editCategoria">
+            <option value="">— Selecione —</option>
+            {% for cat in categorias %}
+              <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Vencimento</label>
+          <input type="date" name="data_vencimento" id="editVencimento">
+        </div>
+        <div class="field full">
+          <label>Substituir arquivo (PDF, imagem, doc)</label>
+          <input type="file" name="arquivo" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+        <button type="submit" class="btn-save">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function abrirModal(id, nome, categoria, vencimento) {
+    document.getElementById('formEditar').action = '/documentos/editar/' + id;
+    document.getElementById('editNome').value = nome;
+    document.getElementById('editVencimento').value = vencimento;
+    var sel = document.getElementById('editCategoria');
+    for (var i = 0; i < sel.options.length; i++) {
+      sel.options[i].selected = sel.options[i].value === categoria;
+    }
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+  function fecharModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+  document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) fecharModal();
+  });
+</script>
+
 </body>
 </html>

@@ -104,6 +104,44 @@ def download(doc_id):
     return send_file(caminho, as_attachment=True, download_name=doc.arquivo_nome or 'documento')
 
 
+@docs_bp.route('/editar/<doc_id>', methods=['POST'])
+@login_required
+def editar(doc_id):
+    doc = Documento.query.filter_by(id=doc_id, empresa_id=current_user.id).first_or_404()
+
+    nome      = request.form.get('nome', '').strip()
+    categoria = request.form.get('categoria', '').strip()
+    venc_str  = request.form.get('data_vencimento', '').strip()
+    arquivo   = request.files.get('arquivo')
+
+    if nome:
+        doc.nome = nome
+    if categoria is not None:
+        doc.categoria = categoria
+    if venc_str:
+        try:
+            doc.data_vencimento = datetime.strptime(venc_str, '%Y-%m-%d').date()
+        except ValueError:
+            pass
+    elif request.form.get('remover_vencimento'):
+        doc.data_vencimento = None
+
+    if arquivo and arquivo.filename and allowed(arquivo.filename):
+        # remove arquivo antigo se existir
+        if doc.arquivo_path:
+            caminho_antigo = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', doc.arquivo_path)
+            if os.path.exists(caminho_antigo):
+                os.remove(caminho_antigo)
+        ext = arquivo.filename.rsplit('.', 1)[1].lower()
+        filename = secure_filename(f"{doc.id}.{ext}")
+        arquivo.save(os.path.join(pasta_empresa(), filename))
+        doc.arquivo_path = f"documentos/{current_user.id}/{filename}"
+        doc.arquivo_nome = arquivo.filename
+
+    db.session.commit()
+    return redirect(url_for('documentos.index'))
+
+
 @docs_bp.route('/deletar/<doc_id>', methods=['POST'])
 @login_required
 def deletar(doc_id):
