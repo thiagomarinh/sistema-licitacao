@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configurações — Composição de Preços</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0D1117;
+    color: #E6EDF3;
+    min-height: 100vh;
+    padding: 40px 16px;
+  }
+  .topbar {
+    background: #161B22;
+    border-bottom: 1px solid #30363D;
+    padding: 0 24px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+  }
+  .topbar-brand { font-size: 14px; font-weight: 700; color: #E6EDF3; }
+  .topbar-brand span { color: #58A6FF; }
+  .topbar-actions { display: flex; align-items: center; gap: 8px; }
+  .btn-back {
+    background: transparent;
+    border: 1px solid #30363D;
+    color: #8B949E;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: inherit;
+    transition: all .15s;
+  }
+  .btn-back:hover { color: #E6EDF3; border-color: #8B949E; }
+
+  .page { max-width: 600px; margin: 80px auto 0; padding-bottom: 60px; }
+
+  h2 { font-size: 18px; font-weight: 700; margin-bottom: 24px; }
+
+  .card {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #8B949E;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #21262D;
+  }
+  .form-group { margin-bottom: 14px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  label { display: block; font-size: 12px; font-weight: 600; color: #8B949E; margin-bottom: 5px; }
+  label span { font-weight: 400; }
+  input[type=text], input[type=email], input[type=password] {
+    width: 100%;
+    background: #0D1117;
+    border: 1px solid #30363D;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 13px;
+    color: #E6EDF3;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input:focus { border-color: #58A6FF; }
+  input.erro { border-color: #F85149; }
+  input[type=file] {
+    width: 100%;
+    background: #0D1117;
+    border: 1px solid #30363D;
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 13px;
+    color: #8B949E;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .msg-erro { font-size: 11px; color: #F85149; margin-top: 4px; }
+  .logo-preview { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .logo-preview img { height: 48px; width: auto; border-radius: 6px; border: 1px solid #30363D; background: #fff; padding: 4px; }
+  .logo-preview span { font-size: 12px; color: #8B949E; }
+  .btn-save {
+    background: #1F6FEB;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .15s;
+    margin-top: 4px;
+  }
+  .btn-save:hover { background: #388BFD; }
+  .btn-save.danger { background: #B62324; }
+  .btn-save.danger:hover { background: #E5534B; }
+  .alert {
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .alert.success { background: #2EA04326; border: 1px solid #3FB950; color: #3FB950; }
+  .alert.error   { background: #F8514922; border: 1px solid #F85149; color: #F85149; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">📊 Composição de <span>Preços</span></div>
+  <div class="topbar-actions">
+    <a href="/" class="btn-back">← Voltar ao sistema</a>
+  </div>
+</div>
+
+<div class="page">
+  <h2>⚙️ Configurações</h2>
+
+  {% if sucesso %}
+    <div class="alert success">{{ sucesso }}</div>
+  {% endif %}
+
+  <!-- DADOS DA EMPRESA -->
+  <div class="card">
+    <div class="card-title">Dados da Empresa</div>
+    <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="acao" value="dados">
+
+      <div class="form-group">
+        <label>Nome da Empresa</label>
+        <input type="text" name="nome" value="{{ empresa.nome or '' }}" required>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>CNPJ</label>
+          <input type="text" name="cnpj" value="{{ empresa.cnpj or '' }}">
+        </div>
+        <div class="form-group">
+          <label>Telefone / WhatsApp</label>
+          <input type="text" name="telefone" value="{{ empresa.telefone or '' }}">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Endereço</label>
+        <input type="text" name="endereco" value="{{ empresa.endereco or '' }}">
+      </div>
+
+      <div class="form-group">
+        <label>Site <span>(opcional)</span></label>
+        <input type="text" name="site" value="{{ empresa.site or '' }}">
+      </div>
+
+      <div class="form-group">
+        <label>Nome do Responsável</label>
+        <input type="text" name="responsavel" value="{{ empresa.responsavel or '' }}">
+      </div>
+
+      <div class="form-group">
+        <label>CPF / RG do Responsável</label>
+        <input type="text" name="documento" value="{{ empresa.documento or '' }}">
+      </div>
+
+      <div class="form-group">
+        <label>E-mail de acesso</label>
+        <input type="email" name="email" value="{{ empresa.email or '' }}" class="{{ 'erro' if erros.get('email') }}" required>
+        {% if erros.get('email') %}<div class="msg-erro">{{ erros['email'] }}</div>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label>Logo da Empresa <span>(PNG ou JPG — deixe em branco para manter)</span></label>
+        {% if empresa.logo_path %}
+          <div class="logo-preview">
+            <img src="/static/{{ empresa.logo_path }}" alt="Logo atual">
+            <span>Logo atual</span>
+          </div>
+        {% endif %}
+        <input type="file" name="logo" accept=".png,.jpg,.jpeg,.webp">
+      </div>
+
+      <button type="submit" class="btn-save">💾 Salvar dados</button>
+    </form>
+  </div>
+
+  <!-- ALTERAR SENHA -->
+  <div class="card">
+    <div class="card-title">Alterar Senha</div>
+    <form method="POST">
+      <input type="hidden" name="acao" value="senha">
+
+      <div class="form-group">
+        <label>Senha atual</label>
+        <input type="password" name="senha_atual" class="{{ 'erro' if erros.get('senha_atual') }}" placeholder="••••••••">
+        {% if erros.get('senha_atual') %}<div class="msg-erro">{{ erros['senha_atual'] }}</div>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label>Nova senha</label>
+        <input type="password" name="senha_nova" class="{{ 'erro' if erros.get('senha_nova') }}" placeholder="Mínimo 6 caracteres">
+        {% if erros.get('senha_nova') %}<div class="msg-erro">{{ erros['senha_nova'] }}</div>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label>Confirmar nova senha</label>
+        <input type="password" name="senha_conf" class="{{ 'erro' if erros.get('senha_conf') }}" placeholder="Repita a nova senha">
+        {% if erros.get('senha_conf') %}<div class="msg-erro">{{ erros['senha_conf'] }}</div>{% endif %}
+      </div>
+
+      <button type="submit" class="btn-save">🔒 Alterar senha</button>
+    </form>
+  </div>
+
+</div>
+</body>
+</html>

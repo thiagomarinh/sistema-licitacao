@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadastro — Composição de Preços</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0D1117;
+    color: #E6EDF3;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+  .card {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 12px;
+    padding: 40px;
+    width: 100%;
+    max-width: 480px;
+  }
+  .logo { text-align: center; margin-bottom: 28px; }
+  .logo h1 { font-size: 20px; font-weight: 700; }
+  .logo p { font-size: 13px; color: #8B949E; margin-top: 4px; }
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #8B949E;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin: 24px 0 12px;
+    border-bottom: 1px solid #21262D;
+    padding-bottom: 6px;
+  }
+  .form-group { margin-bottom: 14px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  label { display: block; font-size: 12px; font-weight: 600; color: #8B949E; margin-bottom: 5px; }
+  label span { color: #8B949E; font-weight: 400; }
+  input, .file-input {
+    width: 100%;
+    background: #0D1117;
+    border: 1px solid #30363D;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #E6EDF3;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input:focus { border-color: #58A6FF; }
+  input[type=file] { padding: 7px 12px; color: #8B949E; cursor: pointer; }
+  .btn {
+    width: 100%;
+    padding: 11px;
+    background: #1F6FEB;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 20px;
+    font-family: inherit;
+    transition: background .15s;
+  }
+  .btn:hover { background: #388BFD; }
+  .link { text-align: center; margin-top: 20px; font-size: 13px; color: #8B949E; }
+  .link a { color: #58A6FF; text-decoration: none; }
+  .link a:hover { text-decoration: underline; }
+  .flash {
+    background: #F8514922;
+    border: 1px solid #F85149;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #F85149;
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <h1>📊 Composição de Preços</h1>
+    <p>Crie sua conta</p>
+  </div>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="flash">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" enctype="multipart/form-data">
+
+    <div class="section-title">Dados da Empresa</div>
+
+    <div class="form-group">
+      <label>Nome da Empresa</label>
+      <input type="text" name="nome" placeholder="Ex: Santa Luzia Distribuidora LTDA" required>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>CNPJ</label>
+        <input type="text" name="cnpj" placeholder="00.000.000/0001-00">
+      </div>
+      <div class="form-group">
+        <label>Telefone / WhatsApp</label>
+        <input type="text" name="telefone" placeholder="(00) 00000-0000">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Endereço</label>
+      <input type="text" name="endereco" placeholder="Rua, número, cidade – UF">
+    </div>
+    <div class="form-group">
+      <label>Site <span>(opcional)</span></label>
+      <input type="text" name="site" placeholder="www.suaempresa.com.br">
+    </div>
+    <div class="form-group">
+      <label>Logo da Empresa <span>(PNG ou JPG)</span></label>
+      <input type="file" name="logo" accept=".png,.jpg,.jpeg,.webp">
+    </div>
+
+    <div class="section-title">Responsável</div>
+
+    <div class="form-group">
+      <label>Nome do Responsável</label>
+      <input type="text" name="responsavel" placeholder="Nome completo">
+    </div>
+    <div class="form-group">
+      <label>CPF / RG</label>
+      <input type="text" name="documento" placeholder="CPF: 000.000.000-00">
+    </div>
+
+    <div class="section-title">Acesso</div>
+
+    <div class="form-group">
+      <label>E-mail</label>
+      <input type="email" name="email" placeholder="seu@email.com" required>
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" name="senha" placeholder="Mínimo 6 caracteres" required minlength="6">
+    </div>
+
+    <button type="submit" class="btn">Criar conta e entrar</button>
+  </form>
+
+  <div class="link">
+    Já tem conta? <a href="{{ url_for('auth.login') }}">Faça login</a>
+  </div>
+</div>
+</body>
+</html>

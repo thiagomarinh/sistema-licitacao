@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documentos — Composição de Preços</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:      #0D1117; --surface: #161B22; --surface2: #21262D;
+    --border:  #30363D; --border2: #3D444D;
+    --text:    #E6EDF3; --muted:   #8B949E;
+    --accent:  #58A6FF; --accent-dim: #1F6FEB22;
+    --green:   #3FB950; --green-dim:  #2EA04326;
+    --orange:  #E3B341; --orange-dim: #BB810026;
+    --red:     #F85149; --red-dim:    #F8514922;
+    --radius:  8px;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 13px; }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 20px; height: 56px; display: flex; align-items: center;
+    justify-content: space-between; position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 10px; }
+  .topbar-brand h1 { font-size: 15px; font-weight: 700; }
+  .topbar-brand h1 span { color: var(--accent); }
+  .topbar-nav { display: flex; gap: 4px; }
+  .nav-link {
+    padding: 6px 14px; border-radius: var(--radius); font-size: 13px; font-weight: 600;
+    text-decoration: none; color: var(--muted); transition: all .15s;
+  }
+  .nav-link:hover { color: var(--text); background: var(--surface2); }
+  .nav-link.ativo { color: var(--accent); background: var(--accent-dim); }
+  .topbar-actions { display: flex; align-items: center; gap: 8px; }
+  .btn-sm {
+    padding: 5px 12px; border-radius: var(--radius); font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    cursor: pointer; text-decoration: none; font-family: inherit; transition: all .15s;
+  }
+  .btn-sm:hover { color: var(--text); border-color: var(--border2); }
+
+  /* LAYOUT */
+  .page { max-width: 1100px; margin: 0 auto; padding: 24px 20px; }
+
+  /* FILTROS */
+  .filtros { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .filtro-btn {
+    padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    text-decoration: none; border: 1px solid var(--border); color: var(--muted);
+    transition: all .15s; display: flex; align-items: center; gap: 6px;
+  }
+  .filtro-btn:hover { border-color: var(--border2); color: var(--text); }
+  .filtro-btn.ativo { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .filtro-btn.vencido.ativo   { border-color: var(--red);    color: var(--red);    background: var(--red-dim); }
+  .filtro-btn.breve.ativo     { border-color: var(--orange);  color: var(--orange);  background: var(--orange-dim); }
+  .filtro-btn.valido.ativo    { border-color: var(--green);   color: var(--green);   background: var(--green-dim); }
+  .badge {
+    background: var(--surface2); border-radius: 10px; padding: 1px 7px;
+    font-size: 11px; font-weight: 700;
+  }
+
+  /* UPLOAD CARD */
+  .upload-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; margin-bottom: 24px;
+  }
+  .upload-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 16px; color: var(--muted); }
+  .upload-grid { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1.2fr auto; gap: 10px; align-items: end; }
+  .field label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+  .field input, .field select {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 8px 10px; font-size: 13px;
+    color: var(--text); font-family: inherit; outline: none; transition: border-color .15s;
+  }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  .field select option { background: var(--surface2); }
+  .field input[type=file] { padding: 6px 10px; color: var(--muted); cursor: pointer; }
+  .btn-upload {
+    background: var(--accent); color: #fff; border: none; border-radius: var(--radius);
+    padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: inherit; white-space: nowrap; transition: background .15s; height: 36px;
+  }
+  .btn-upload:hover { background: #388BFD; }
+
+  /* LISTA */
+  .doc-list { display: flex; flex-direction: column; gap: 8px; }
+  .doc-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; display: flex; align-items: center; gap: 14px; transition: border-color .15s;
+  }
+  .doc-card:hover { border-color: var(--border2); }
+  .doc-card.vencido      { border-left: 3px solid var(--red); }
+  .doc-card.vence_em_breve { border-left: 3px solid var(--orange); }
+  .doc-card.valido       { border-left: 3px solid var(--green); }
+  .doc-card.sem_vencimento { border-left: 3px solid var(--border2); }
+
+  .doc-icon { font-size: 22px; flex-shrink: 0; }
+  .doc-info { flex: 1; min-width: 0; }
+  .doc-nome { font-size: 14px; font-weight: 600; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .doc-meta { font-size: 12px; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
+
+  .doc-status { flex-shrink: 0; }
+  .status-badge {
+    padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap;
+  }
+  .status-badge.vencido        { background: var(--red-dim);    color: var(--red);    border: 1px solid var(--red); }
+  .status-badge.vence_em_breve { background: var(--orange-dim); color: var(--orange); border: 1px solid var(--orange); }
+  .status-badge.valido         { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green); }
+  .status-badge.sem_vencimento { background: var(--surface2);   color: var(--muted);  border: 1px solid var(--border); }
+
+  .doc-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .btn-action {
+    padding: 5px 12px; border-radius: var(--radius); font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    text-decoration: none; cursor: pointer; font-family: inherit; transition: all .15s;
+  }
+  .btn-action:hover { color: var(--text); border-color: var(--border2); }
+  .btn-action.danger:hover { color: var(--red); border-color: var(--red); background: var(--red-dim); }
+
+  .vazio {
+    text-align: center; padding: 60px 20px; color: var(--muted);
+    background: var(--surface); border: 1px dashed var(--border); border-radius: 12px;
+  }
+  .vazio p { font-size: 14px; margin-top: 10px; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: #0008;
+    z-index: 200; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px; width: 100%; max-width: 520px; box-shadow: 0 8px 32px #0006;
+  }
+  .modal h3 { font-size: 14px; font-weight: 700; margin-bottom: 18px; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .modal-grid .full { grid-column: 1 / -1; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+  .btn-cancel {
+    padding: 7px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 600;
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    cursor: pointer; font-family: inherit; transition: all .15s;
+  }
+  .btn-cancel:hover { color: var(--text); border-color: var(--border2); }
+  .btn-save {
+    padding: 7px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 600;
+    border: none; background: var(--accent); color: #fff;
+    cursor: pointer; font-family: inherit; transition: background .15s;
+  }
+  .btn-save:hover { background: #388BFD; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <div>📊</div>
+    <h1>Composição de <span>Preços</span> — Licitação</h1>
+  </div>
+  <nav class="topbar-nav">
+    <a href="/" class="nav-link">📋 Composições</a>
+    <a href="/documentos/" class="nav-link ativo">📁 Documentos</a>
+  </nav>
+  <div class="topbar-actions">
+    <span style="font-size:12px;font-weight:600;color:var(--muted)">{{ current_user.nome }}</span>
+    <a href="/configuracoes" class="btn-sm" title="Configurações">⚙️</a>
+    <a href="/logout" class="btn-sm">Sair</a>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- UPLOAD -->
+  <div class="upload-card">
+    <h3>📤 Adicionar documento</h3>
+    <form method="POST" action="/documentos/upload" enctype="multipart/form-data">
+      <div class="upload-grid">
+        <div class="field">
+          <label>Nome do documento</label>
+          <input type="text" name="nome" placeholder="Ex: CND Federal 2025" required>
+        </div>
+        <div class="field">
+          <label>Categoria</label>
+          <select name="categoria">
+            <option value="">— Selecione —</option>
+            {% for cat in categorias %}
+              <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Vencimento</label>
+          <input type="date" name="data_vencimento">
+        </div>
+        <div class="field">
+          <label>Arquivo (PDF, imagem, doc)</label>
+          <input type="file" name="arquivo" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx">
+        </div>
+        <div>
+          <button type="submit" class="btn-upload">+ Adicionar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="filtros">
+    <a href="?filtro=todos" class="filtro-btn {{ 'ativo' if filtro == 'todos' }}">
+      Todos <span class="badge">{{ contagem.todos }}</span>
+    </a>
+    <a href="?filtro=vencido" class="filtro-btn vencido {{ 'ativo' if filtro == 'vencido' }}">
+      🔴 Vencidos <span class="badge">{{ contagem.vencido }}</span>
+    </a>
+    <a href="?filtro=vence_em_breve" class="filtro-btn breve {{ 'ativo' if filtro == 'vence_em_breve' }}">
+      🟡 Vence em breve <span class="badge">{{ contagem.vence_em_breve }}</span>
+    </a>
+    <a href="?filtro=valido" class="filtro-btn valido {{ 'ativo' if filtro == 'valido' }}">
+      🟢 Válidos <span class="badge">{{ contagem.valido }}</span>
+    </a>
+  </div>
+
+  <!-- LISTA -->
+  <div class="doc-list">
+    {% if docs %}
+      {% for doc in docs %}
+        {% set ext = doc.arquivo_nome.rsplit('.', 1)[-1].lower() if doc.arquivo_nome else '' %}
+        {% set icone = '📄' if ext == 'pdf' else ('🖼️' if ext in ['png','jpg','jpeg'] else ('📊' if ext in ['xls','xlsx'] else ('📝' if ext in ['doc','docx'] else '📎'))) %}
+        <div class="doc-card {{ doc.status }}">
+          <div class="doc-icon">{{ icone }}</div>
+          <div class="doc-info">
+            <div class="doc-nome">{{ doc.nome }}</div>
+            <div class="doc-meta">
+              {% if doc.categoria %}<span>{{ doc.categoria }}</span>{% endif %}
+              {% if doc.data_vencimento %}
+                <span>Vence: {{ doc.data_vencimento.strftime('%d/%m/%Y') }}</span>
+                {% if doc.status == 'vencido' %}
+                  <span style="color:var(--red)">Vencido há {{ doc.dias_para_vencer | abs }} dia(s)</span>
+                {% elif doc.status == 'vence_em_breve' %}
+                  <span style="color:var(--orange)">Vence em {{ doc.dias_para_vencer }} dia(s)</span>
+                {% endif %}
+              {% else %}
+                <span>Sem data de vencimento</span>
+              {% endif %}
+              <span>Adicionado em {{ doc.criado_em.strftime('%d/%m/%Y') }}</span>
+            </div>
+          </div>
+          <div class="doc-status">
+            {% if doc.status == 'vencido' %}
+              <span class="status-badge vencido">Vencido</span>
+            {% elif doc.status == 'vence_em_breve' %}
+              <span class="status-badge vence_em_breve">Vence em breve</span>
+            {% elif doc.status == 'valido' %}
+              <span class="status-badge valido">Válido</span>
+            {% else %}
+              <span class="status-badge sem_vencimento">Sem vencimento</span>
+            {% endif %}
+          </div>
+          <div class="doc-actions">
+            {% if doc.arquivo_path %}
+              <a href="/documentos/download/{{ doc.id }}" class="btn-action">⬇ Baixar</a>
+            {% endif %}
+            <button class="btn-action" onclick="abrirModal('{{ doc.id }}', '{{ doc.nome|replace("'","\\'") }}', '{{ doc.categoria or "" }}', '{{ doc.data_vencimento.strftime("%Y-%m-%d") if doc.data_vencimento else "" }}')">✏ Editar</button>
+            <form method="POST" action="/documentos/deletar/{{ doc.id }}" style="display:inline"
+                  onsubmit="return confirm('Excluir este documento?')">
+              <button type="submit" class="btn-action danger">🗑</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="vazio">
+        <div style="font-size:40px">📁</div>
+        <p>Nenhum documento encontrado.<br>Adicione documentos usando o formulário acima.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- MODAL EDITAR -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>✏ Editar documento</h3>
+    <form id="formEditar" method="POST" enctype="multipart/form-data">
+      <div class="modal-grid">
+        <div class="field full">
+          <label>Nome do documento</label>
+          <input type="text" name="nome" id="editNome" required>
+        </div>
+        <div class="field">
+          <label>Categoria</label>
+          <select name="categoria" id="editCategoria">
+            <option value="">— Selecione —</option>
+            {% for cat in categorias %}
+              <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Vencimento</label>
+          <input type="date" name="data_vencimento" id="editVencimento">
+        </div>
+        <div class="field full">
+          <label>Substituir arquivo (PDF, imagem, doc)</label>
+          <input type="file" name="arquivo" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+        <button type="submit" class="btn-save">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function abrirModal(id, nome, categoria, vencimento) {
+    document.getElementById('formEditar').action = '/documentos/editar/' + id;
+    document.getElementById('editNome').value = nome;
+    document.getElementById('editVencimento').value = vencimento;
+    var sel = document.getElementById('editCategoria');
+    for (var i = 0; i < sel.options.length; i++) {
+      sel.options[i].selected = sel.options[i].value === categoria;
+    }
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+  function fecharModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+  document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) fecharModal();
+  });
+</script>
+
+</body>
+</html>

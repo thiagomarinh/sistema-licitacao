@@ -1,0 +1,49 @@
+{
+  "composicoes": [
+    {
+      "titulo": "Tracuateua",
+      "num_pregao": "001/2026",
+      "num_processo": "2026.001.000123",
+      "config": {
+        "taxa": 10,
+        "lucro_liq": 10,
+        "dasn": 9
+      },
+      "itens": [
+        {
+          "custo_unit": 150,
+          "descricao": "monitor 19.2 polegadas",
+          "fornecedor": "Brazil pc",
+          "id": 1,
+          "marca": "brazil pc",
+          "novo_lance": "211.27",
+          "quantidade": "150",
+          "unidade": "UND"
+        },
+        {
+          "custo_unit": 100,
+          "descricao": "nobreak 3000 va",
+          "fornecedor": "Ragtech",
+          "id": 2,
+          "marca": "Ragtech",
+          "novo_lance": "140.85",
+          "quantidade": "200",
+          "unidade": "UND"
+        },
+        {
+          "custo_unit": 300,
+          "descricao": "notebook i7",
+          "fornecedor": "Fujioka",
+          "id": 3,
+          "marca": "lenovo",
+          "novo_lance": "422.54",
+          "quantidade": "250",
+          "unidade": "UND"
+        }
+      ],
+      "id": "4ae9205c-28b0-4779-a250-d50a77d654c6",
+      "atualizado_em": "2026-04-01T16:50:39.479698",
+      "criado_em": "2026-04-01T10:47:24.313242"
+    }
+  ]
+}

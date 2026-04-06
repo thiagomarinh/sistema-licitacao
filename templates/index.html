@@ -3,282 +3,787 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Composição de Preços - Licitação</title>
+<title>Composição de Preços — Licitação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #222; font-size: 13px; }
+:root {
+  --bg:        #0D1117;
+  --surface:   #161B22;
+  --surface2:  #21262D;
+  --border:    #30363D;
+  --border2:   #3D444D;
+  --text:      #E6EDF3;
+  --muted:     #8B949E;
+  --accent:    #58A6FF;
+  --accent-dim:#1F6FEB22;
+  --green:     #3FB950;
+  --green-dim: #2EA04326;
+  --orange:    #E3B341;
+  --orange-dim:#BB810026;
+  --red:       #F85149;
+  --red-dim:   #F8514922;
+  --purple:    #BC8CFF;
+  --purple-dim:#8957E522;
+  --teal:      #39D353;
+  --radius:    8px;
+  --radius-lg: 12px;
+}
 
-  /* TOPO */
-  .topbar {
-    background: linear-gradient(135deg, #1a3a5c, #2e6da4);
-    color: #fff;
-    padding: 12px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .topbar h1 {
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-  }
-  .topbar h1 span { color: #7ecbff; }
-  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+[data-theme="light"] {
+  --bg:        #F6F8FA;
+  --surface:   #FFFFFF;
+  --surface2:  #F0F3F6;
+  --border:    #D0D7DE;
+  --border2:   #B0B8C1;
+  --text:      #1F2328;
+  --muted:     #656D76;
+  --accent:    #0969DA;
+  --accent-dim:#0969DA18;
+  --green:     #1A7F37;
+  --green-dim: #1A7F3718;
+  --orange:    #9A6700;
+  --orange-dim:#9A670018;
+  --red:       #CF222E;
+  --red-dim:   #CF222E18;
+  --purple:    #6639BA;
+  --purple-dim:#6639BA18;
+}
 
-  /* TITULO EDITÁVEL */
-  .titulo-wrap {
-    background: #fff;
-    border-bottom: 3px solid #2e6da4;
-    padding: 8px 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  #titulo-input {
-    font-size: 15px;
-    font-weight: 700;
-    color: #1a3a5c;
-    border: none;
-    border-bottom: 2px dashed #aaa;
-    background: transparent;
-    width: 500px;
-    outline: none;
-    padding: 2px 4px;
-  }
-  #titulo-input:focus { border-bottom-color: #2e6da4; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* CONFIG */
-  .config-bar {
-    background: #e8f0fe;
-    border-bottom: 1px solid #b8cff5;
-    padding: 8px 20px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    flex-wrap: wrap;
-  }
-  .config-bar label { font-weight: 600; color: #1a3a5c; font-size: 12px; }
-  .config-bar input[type=number] {
-    width: 60px;
-    border: 1px solid #aac;
-    border-radius: 4px;
-    padding: 3px 6px;
-    font-size: 12px;
-    text-align: center;
-  }
-  .config-bar .config-item { display: flex; align-items: center; gap: 5px; }
-  .config-bar .config-total {
-    background: #1a3a5c;
-    color: #fff;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-weight: 700;
-    font-size: 12px;
-  }
+body {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  min-height: 100vh;
+}
 
-  /* TABELA */
-  .table-container {
-    overflow-x: auto;
-    padding: 12px 20px 20px;
-  }
-  table {
-    border-collapse: collapse;
-    min-width: 1800px;
-    width: 100%;
-    background: #fff;
-    border-radius: 6px;
-    overflow: hidden;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-  }
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
-  /* CABEÇALHOS */
-  thead tr.h1 th {
-    background: #1a3a5c;
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 6px 4px;
-    text-align: center;
-    border: 1px solid #2e5a8a;
-  }
-  thead tr.h1 th.grp-aquisicao { background: #1a3a5c; }
-  thead tr.h1 th.grp-venda { background: #145a32; }
-  thead tr.h1 th.grp-novo-lance { background: #7d3c00; }
-  thead tr.h1 th.grp-resultados { background: #4a235a; }
+/* ── TOPBAR ── */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 0 var(--border);
+}
 
-  /* LINHAS */
-  tbody tr { transition: background 0.15s; }
-  tbody tr:nth-child(even) { background: #f4f8fd; }
-  tbody tr:hover { background: #ddeeff; }
-  tbody tr.total-row {
-    background: #c5dcf5 !important;
-    font-weight: 700;
-    border-top: 2px solid #1a3a5c;
-  }
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-  td, th {
-    padding: 5px 5px;
-    border: 1px solid #dde4ef;
-    white-space: nowrap;
-    vertical-align: middle;
-  }
-  td.num { text-align: right; }
-  td.ctr { text-align: center; }
-  td.seq { text-align: center; color: #888; font-size: 11px; min-width: 30px; }
+.topbar-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--accent), #1F6FEB);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 0 12px #1F6FEB44;
+}
 
-  /* INPUTS NA TABELA */
-  td input[type=text], td input[type=number] {
-    border: 1px solid transparent;
-    background: transparent;
-    width: 100%;
-    padding: 2px 4px;
-    font-size: 12px;
-    font-family: inherit;
-    outline: none;
-    border-radius: 3px;
-    transition: border-color 0.15s, background 0.15s;
-  }
-  td input:focus {
-    border-color: #2e6da4;
-    background: #eaf3ff;
-  }
-  td input[type=number] { text-align: right; }
-  td.input-desc input { min-width: 220px; }
-  td.input-text input { min-width: 100px; }
+.topbar-brand h1 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+.topbar-brand h1 span { color: var(--accent); }
 
-  /* CALCULADO */
-  td.calc { background: #f8fffe; color: #145a32; text-align: right; }
-  td.calc-novo { background: #fff8f0; color: #7d3c00; text-align: right; }
-  td.calc-res { background: #fdf5ff; color: #4a235a; text-align: right; }
-  td.pct { text-align: center; }
-  td.pct-verde { color: #1a7a2a; font-weight: 600; text-align: center; }
-  td.pct-warn { color: #c0392b; font-weight: 600; text-align: center; }
+.topbar-actions { display: flex; gap: 6px; align-items: center; }
 
-  /* BOTÕES */
-  .btn {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 7px 14px; border: none; border-radius: 5px;
-    cursor: pointer; font-size: 12px; font-weight: 600;
-    transition: all 0.2s; text-decoration: none;
-  }
-  .btn-primary { background: #2e6da4; color: #fff; }
-  .btn-primary:hover { background: #1a4f80; }
-  .btn-success { background: #1e8449; color: #fff; }
-  .btn-success:hover { background: #145a32; }
-  .btn-warning { background: #e67e22; color: #fff; }
-  .btn-warning:hover { background: #ca6f1e; }
-  .btn-danger { background: #c0392b; color: #fff; }
-  .btn-danger:hover { background: #922b21; }
-  .btn-light { background: #ecf0f1; color: #333; border: 1px solid #bbb; }
-  .btn-light:hover { background: #d5dbdb; }
-  .btn-sm { padding: 3px 8px; font-size: 11px; border-radius: 3px; }
+/* ── BOTÕES ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #0D1117;
+  border-color: var(--accent);
+}
+.btn-primary:hover { background: #79C0FF; border-color: #79C0FF; }
 
-  .btn-del {
-    background: none; border: none; color: #c0392b; cursor: pointer;
-    font-size: 14px; padding: 2px 5px; border-radius: 3px;
-    transition: background 0.15s;
-  }
-  .btn-del:hover { background: #fde8e8; }
+.btn-success {
+  background: var(--green-dim);
+  color: var(--green);
+  border-color: #3FB95044;
+}
+.btn-success:hover { background: #2EA04344; border-color: var(--green); }
 
-  /* TOAST */
-  #toast {
-    position: fixed; bottom: 20px; right: 20px;
-    background: #1e8449; color: #fff;
-    padding: 10px 20px; border-radius: 6px;
-    font-size: 13px; font-weight: 600;
-    opacity: 0; transition: opacity 0.3s;
-    pointer-events: none; z-index: 9999;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  }
-  #toast.show { opacity: 1; }
-  #toast.error { background: #c0392b; }
+.btn-warning {
+  background: var(--orange-dim);
+  color: var(--orange);
+  border-color: #BB810044;
+}
+.btn-warning:hover { background: #BB810044; border-color: var(--orange); }
 
-  /* RODAPÉ TOTAIS FLUTUANTE */
-  .totais-bar {
-    position: sticky;
-    bottom: 0;
-    background: #1a3a5c;
-    color: #fff;
-    padding: 6px 20px;
-    display: flex;
-    gap: 24px;
-    flex-wrap: wrap;
-    font-size: 12px;
-    box-shadow: 0 -2px 8px rgba(0,0,0,0.2);
-  }
-  .totais-bar .t-item { display: flex; flex-direction: column; align-items: center; }
-  .totais-bar .t-label { font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; }
-  .totais-bar .t-val { font-weight: 700; font-size: 14px; color: #7ecbff; }
-  .totais-bar .t-val.verde { color: #7ddc8a; }
-  .totais-bar .t-val.laranja { color: #ffc67a; }
+.btn-danger {
+  background: var(--red-dim);
+  color: var(--red);
+  border-color: #F8514922;
+}
+.btn-danger:hover { background: #F8514933; border-color: var(--red); }
 
-  @media print {
-    .topbar, .config-bar, .titulo-wrap .btn, .btn-del, .totais-bar { display: none !important; }
-    body { background: #fff; }
-    .table-container { padding: 0; }
-    table { box-shadow: none; }
-  }
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border-color: var(--border);
+}
+.btn-ghost:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+
+.btn-sm { padding: 4px 8px; font-size: 11px; }
+
+.btn-del {
+  background: none; border: none; color: var(--muted);
+  cursor: pointer; font-size: 13px; padding: 3px 6px;
+  border-radius: 4px; transition: all 0.15s; font-family: inherit;
+}
+.btn-del:hover { background: var(--red-dim); color: var(--red); }
+
+/* ── DIVIDER ── */
+.divider { width: 1px; height: 20px; background: var(--border); margin: 0 2px; }
+
+/* ── EMPRESA TOGGLE ── */
+.empresa-toggle {
+  display: flex;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  gap: 0;
+}
+.btn-emp {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.btn-emp:hover { color: var(--text); background: var(--border); }
+.btn-emp.ativo { background: var(--accent); color: #fff; }
+
+/* ── HEADER SECTION (titulo + config) ── */
+.header-section {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  background: var(--surface);
+}
+
+.pregao-section {
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.pregao-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 5px 12px;
+}
+
+.pregao-item label {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pregao-item input[type=text] {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border2);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 500;
+  outline: none;
+  width: 180px;
+  padding: 2px 4px;
+  transition: border-color 0.15s;
+}
+.pregao-item input[type=text]:focus { border-bottom-color: var(--accent); }
+
+.titulo-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 260px;
+}
+
+.titulo-label {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#titulo-input {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border2);
+  padding: 3px 6px;
+  outline: none;
+  font-family: inherit;
+  flex: 1;
+  transition: border-color 0.15s;
+}
+#titulo-input:focus { border-bottom-color: var(--accent); }
+
+.config-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.config-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 10px;
+}
+.config-item label {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  font-weight: 500;
+}
+.config-item input[type=number] {
+  width: 52px;
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  outline: none;
+  font-family: inherit;
+}
+.config-item input[type=number]::-webkit-inner-spin-button { opacity: 0.3; }
+
+.config-badge {
+  background: linear-gradient(135deg, #1F6FEB33, #58A6FF22);
+  border: 1px solid #58A6FF44;
+  color: var(--accent);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+#status-label {
+  font-size: 11px;
+  font-weight: 500;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* ── TABELA ── */
+.table-toolbar {
+  padding: 8px 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.btn-add-item {
+  border: 1px dashed var(--border2);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius);
+}
+.btn-add-item:hover { background: var(--accent-dim); border-color: var(--accent); }
+.btn-limpar-itens {
+  border: 1px dashed var(--border2);
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius);
+}
+.btn-limpar-itens:hover { background: var(--red-dim); border-color: var(--red); }
+
+.table-container {
+  overflow-x: auto;
+  padding: 8px 20px 16px;
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 1800px;
+  width: 100%;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+thead tr.h1 th {
+  background: var(--surface2);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 10px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+thead tr.h1 th:last-child { border-right: none; }
+
+thead tr.h1 th.grp-aquisicao { color: var(--accent); border-top: 2px solid var(--accent); }
+thead tr.h1 th.grp-venda     { color: var(--green);  border-top: 2px solid var(--green); }
+thead tr.h1 th.grp-novo-lance{ color: var(--orange); border-top: 2px solid var(--orange); }
+thead tr.h1 th.grp-resultados{ color: var(--purple); border-top: 2px solid var(--purple); }
+
+tbody tr { transition: background 0.1s; }
+tbody tr:nth-child(even) { background: #ffffff04; }
+tbody tr:hover { background: var(--surface2); }
+
+tbody tr.total-row {
+  background: #58A6FF0D !important;
+  border-top: 1px solid var(--border2);
+}
+
+td, th {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+td:last-child, th:last-child { border-right: none; }
+tbody tr:last-child td { border-bottom: none; }
+
+td.num  { text-align: right; }
+td.ctr  { text-align: center; }
+td.seq  { text-align: center; min-width: 36px; max-width: 36px; padding: 0 2px; }
+td.seq input { text-align: center; color: var(--muted); font-size: 11px; width: 100%; font-weight: 600; padding: 2px 2px; }
+
+/* INPUTS NA TABELA */
+td input[type=text], td input[type=number] {
+  border: 1px solid transparent;
+  background: transparent;
+  width: 100%;
+  padding: 3px 5px;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  border-radius: 4px;
+  color: var(--text);
+  transition: border-color 0.15s, background 0.15s;
+}
+td input::placeholder { color: var(--border2); }
+td input:focus {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+td input[type=number] { text-align: right; }
+td.input-desc input { min-width: 220px; }
+td.input-text input { min-width: 100px; }
+
+/* CALCULADO */
+td.calc      { color: var(--accent);  text-align: right; background: var(--accent-dim); }
+td.calc-novo { color: var(--orange);  text-align: right; background: var(--orange-dim); }
+td.calc-res  { color: var(--purple);  text-align: right; background: var(--purple-dim); }
+td.pct       { text-align: center; }
+td.pct-verde { color: var(--green);  font-weight: 600; text-align: center; }
+td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; top: 68px; right: 20px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.25s, transform 0.25s;
+  pointer-events: none;
+  z-index: 9999;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  display: flex; align-items: center; gap: 8px;
+}
+#toast::before { content: '✓'; color: var(--green); font-weight: 700; }
+#toast.show { opacity: 1; transform: translateY(0); }
+#toast.error::before { content: '✕'; color: var(--red); }
+
+/* ── MODAL GERAR ── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  width: 460px;
+  max-width: 95vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.modal-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: 16px; padding: 2px 6px;
+}
+.modal-close:hover { color: var(--red); }
+.modal-sel-all {
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border2);
+  font-size: 12px;
+  color: var(--muted);
+}
+.modal-sel-all label { cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.modal-lista {
+  overflow-y: auto;
+  flex: 1;
+  padding: 8px 0;
+}
+.modal-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: background .1s;
+}
+.modal-item:hover { background: var(--surface2); }
+.modal-item input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; flex-shrink: 0; cursor: pointer; }
+.modal-item-num { font-size: 11px; color: var(--muted); min-width: 24px; font-weight: 600; }
+.modal-item-desc { font-size: 13px; color: var(--text); flex: 1; }
+.modal-item-qtd { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── TOTAIS BAR ── */
+.totais-bar {
+  position: sticky;
+  bottom: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 8px 20px;
+  display: flex;
+  gap: 0;
+  font-size: 12px;
+  backdrop-filter: blur(12px);
+  z-index: 100;
+}
+
+.t-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 20px;
+  border-right: 1px solid var(--border);
+}
+.t-item:first-child { padding-left: 0; }
+.t-item:last-child { border-right: none; }
+
+.t-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+.t-val {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.t-val.verde  { color: var(--green); }
+.t-val.laranja{ color: var(--orange); }
+
+/* ── COMPOSIÇÕES SECTION ── */
+.composicoes-section {
+  padding: 20px;
+}
+
+.composicoes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.composicoes-header h2 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.composicoes-header h2::before {
+  content: '';
+  display: inline-block;
+  width: 3px; height: 14px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+.lista-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 10px;
+}
+
+.lista-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s, box-shadow 0.15s;
+  cursor: default;
+}
+.lista-item:hover {
+  border-color: var(--border2);
+  border-left-color: var(--accent);
+  background: var(--surface2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.lista-item.ativo {
+  border-left-color: var(--accent);
+  background: var(--accent-dim);
+  border-color: #58A6FF44;
+}
+
+.lista-item-info { flex: 1; min-width: 0; }
+.lista-item-info strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+.lista-item-info small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.lista-item-badge {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.lista-item-actions { display: flex; gap: 6px; align-items: center; }
+
+.lista-vazia {
+  text-align: center;
+  color: var(--muted);
+  padding: 32px;
+  font-size: 13px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--border);
+}
+.lista-vazia::before {
+  content: '📂';
+  display: block;
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+@media print {
+  .topbar, .header-section .btn, .btn-del,
+  .totais-bar, .composicoes-section { display: none !important; }
+  body { background: #fff; color: #000; }
+  table { border: 1px solid #ccc; }
+  td, th { border: 1px solid #ccc; color: #000 !important; background: #fff !important; }
+}
 </style>
 </head>
 <body>
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <h1>Composição de <span>Preços</span> &mdash; Licitação</h1>
+  <div class="topbar-brand">
+    <div class="topbar-icon">📊</div>
+    <h1>Composição de <span>Preços</span> — Licitação</h1>
+  </div>
+  <nav style="display:flex;gap:4px">
+    <a href="/" style="padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;color:var(--accent);background:var(--accent-dim)">📋 Composições</a>
+    <a href="/documentos/" style="padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;color:var(--muted)">📁 Documentos</a>
+  </nav>
   <div class="topbar-actions">
-    <button class="btn btn-light" onclick="addItem()">&#43; Adicionar Item</button>
-    <button class="btn btn-success" onclick="salvar()">&#128190; Salvar</button>
-    <button class="btn btn-warning" onclick="exportarExcel()">&#128196; Exportar Excel</button>
-    <button class="btn btn-light" onclick="window.print()">&#128424; Imprimir</button>
-    <button class="btn btn-danger btn-sm" onclick="limparTudo()" title="Limpar todos os itens">&#128465; Limpar</button>
+    <button class="btn btn-success" onclick="salvar()">💾 Salvar</button>
+    <button class="btn btn-primary" onclick="abrirModalGerar()">📋 Gerar</button>
+    <button class="btn btn-warning" onclick="exportarExcel()">📄 Excel</button>
+    <button class="btn btn-ghost" onclick="window.print()">🖨️ Imprimir</button>
+    <div class="divider"></div>
+    <button class="btn btn-ghost btn-sm" id="btn-tema" onclick="toggleTema()" title="Alternar tema"></button>
+    <div class="divider"></div>
+    <span id="nome-empresa" style="font-size:12px;font-weight:600;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    <a href="/configuracoes" class="btn btn-ghost btn-sm" style="text-decoration:none" title="Configurações">⚙️</a>
+    <a href="/logout" class="btn btn-ghost btn-sm" style="text-decoration:none">Sair</a>
   </div>
 </div>
 
-<!-- TITULO EDITÁVEL -->
-<div class="titulo-wrap">
-  <span style="color:#888;font-size:12px;">Título:</span>
-  <input type="text" id="titulo-input" value="COMPOSIÇÃO DE PREÇOS - LICITAÇÃO" oninput="markDirty()">
+<!-- CABEÇALHO: TÍTULO + CONFIG -->
+<div class="header-section">
+  <div class="titulo-group">
+    <span class="titulo-label">Título</span>
+    <input type="text" id="titulo-input" value="COMPOSIÇÃO DE PREÇOS - LICITAÇÃO" oninput="markDirty()">
+  </div>
+
+  <div class="config-group">
+    <div class="config-item">
+      <label>Custo Op. %</label>
+      <input type="number" id="cfg-taxa" value="" min="0" max="100" step="0.01" oninput="recalcAll(); markDirty()">
+    </div>
+    <div class="config-item">
+      <label>Lucro Líq. %</label>
+      <input type="number" id="cfg-lucro" value="" min="0" max="100" step="0.01" oninput="recalcAll(); markDirty()">
+    </div>
+    <div class="config-item">
+      <label>DASN %</label>
+      <input type="number" id="cfg-dasn" value="" min="0" max="100" step="0.01" oninput="recalcAll(); markDirty()">
+    </div>
+    <div class="config-badge" id="cfg-total-label">Desconto Total: 19,00%</div>
+  </div>
+
+  <span id="status-label">
+    <span class="status-dot" id="status-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)"></span>
+    Salvo
+  </span>
 </div>
 
-<!-- CONFIGURAÇÕES -->
-<div class="config-bar">
-  <span style="font-weight:700;color:#1a3a5c;font-size:13px;">&#9881; Parâmetros:</span>
-
-  <div class="config-item">
-    <label>Custo Operacional %</label>
-    <input type="number" id="cfg-taxa" value="" min="0" max="100" step="0.01" oninput="recalcAll(); markDirty()">
+<!-- PREGÃO / PROCESSO -->
+<div class="pregao-section">
+  <div class="pregao-item">
+    <label for="num-pregao">Nº DO PREGÃO</label>
+    <input type="text" id="num-pregao" placeholder="Ex: 001/2026" oninput="markDirty()">
   </div>
-  <div class="config-item">
-    <label>Lucro Líquido %</label>
-    <input type="number" id="cfg-lucro" value="" min="0" max="100" step="0.01" oninput="recalcAll(); markDirty()">
+  <div class="pregao-item">
+    <label for="num-processo">Nº DO PROCESSO</label>
+    <input type="text" id="num-processo" placeholder="Ex: 2026.001.000123" oninput="markDirty()">
   </div>
-  <div class="config-item">
-    <label>DASN %</label>
-    <input type="number" id="cfg-dasn" value="" min="0" max="100" step="0.01" oninput="recalcAll(); markDirty()">
-  </div>
-
-  <div class="config-total" id="cfg-total-label">Desconto Total: 19,00%</div>
-
-  <span style="margin-left:auto;font-size:11px;color:#666;" id="status-label">&#128994; Salvo</span>
 </div>
 
 <!-- TABELA -->
+<div class="table-toolbar">
+  <button class="btn btn-ghost btn-add-item" onclick="addItem()">+ Adicionar Item</button>
+  <button class="btn btn-ghost btn-limpar-itens" onclick="limparTudo()" title="Limpar todos os itens">🗑️ Limpar Itens</button>
+</div>
 <div class="table-container">
 <table id="tabela">
   <thead>
     <tr class="h1">
-      <th rowspan="1">#</th>
-      <th rowspan="1">DESCRIÇÃO</th>
-      <th rowspan="1">UND</th>
-      <th rowspan="1">QUANT</th>
-      <th rowspan="1">FORNECEDOR</th>
-      <th rowspan="1">MARCA<br>SELECIONADA</th>
+      <th>ITEM</th>
+      <th>DESCRIÇÃO</th>
+      <th>UND</th>
+      <th>QUANT</th>
+      <th>FORNECEDOR</th>
+      <th>MARCA<br>SELECIONADA</th>
       <th class="grp-aquisicao">CUSTO UNIT.<br>AQUISIÇÃO</th>
       <th class="grp-aquisicao">CUSTO TOTAL<br>AQUISIÇÃO</th>
       <th class="grp-venda">PREÇO VENDA<br>UNIT.</th>
@@ -290,14 +795,13 @@
       <th class="grp-resultados">NOVO<br>LUCRO R$</th>
       <th class="grp-resultados">DASN<br>R$</th>
       <th class="grp-resultados">CUSTO<br>OPERAC.</th>
-      <th rowspan="1"></th>
+      <th></th>
     </tr>
   </thead>
-  <tbody id="tbody">
-  </tbody>
+  <tbody id="tbody"></tbody>
   <tfoot>
     <tr class="total-row" id="tr-total">
-      <td class="ctr" colspan="6"><strong>T O T A I S</strong></td>
+      <td class="ctr" colspan="6"><strong style="color:var(--muted);letter-spacing:1px;font-size:11px;">TOTAIS</strong></td>
       <td class="calc num" id="tot-custo-unit">R$ 0,00</td>
       <td class="calc num" id="tot-custo-total">R$ 0,00</td>
       <td class="calc num">—</td>
@@ -343,12 +847,54 @@
   </div>
 </div>
 
+<!-- LISTA DE COMPOSIÇÕES -->
+<div class="composicoes-section">
+  <div class="composicoes-header">
+    <h2>Composições Salvas</h2>
+    <button class="btn btn-ghost btn-sm" onclick="novaComposicao()">+ Nova Composição</button>
+  </div>
+  <div class="lista-grid" id="lista-composicoes">
+    <div class="lista-vazia">Nenhuma composição salva ainda.<br>Preencha os dados acima e clique em Salvar.</div>
+  </div>
+</div>
+
+<!-- MODAL SELEÇÃO DE ITENS -->
+<div id="modal-gerar" class="modal-overlay" onclick="fecharModalGerar(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">Selecionar itens para o documento</span>
+      <button class="modal-close" onclick="document.getElementById('modal-gerar').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-sel-all">
+      <label><input type="checkbox" id="chk-todos" onchange="toggleTodosItens(this.checked)"> Selecionar todos</label>
+    </div>
+    <div class="modal-lista" id="modal-lista-itens"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-gerar').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarGerar()">📋 Gerar documento</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
 // ===================== ESTADO =====================
 let itens = [];
 let dirty = false;
+let currentComposicaoId = null;
+let empresaInfo = {};
+
+// ===================== EMPRESA =====================
+async function carregarEmpresaInfo() {
+  try {
+    const r = await fetch('/api/empresa/info');
+    if (r.ok) {
+      empresaInfo = await r.json();
+      document.getElementById('nome-empresa').textContent = empresaInfo.nome || '';
+    }
+  } catch(e) {}
+}
 
 // ===================== FORMATAÇÃO =====================
 function fmtBRL(v) {
@@ -365,16 +911,22 @@ function fmtNum(v, dec = 2) {
 }
 function parseNum(s) {
   if (!s) return 0;
-  // aceita vírgula como decimal (pt-BR) ou ponto (padrão)
   return parseFloat(String(s).replace(/\./g, '').replace(',', '.')) || 0;
+}
+function formatarData(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  } catch { return iso; }
 }
 
 // ===================== CONFIGURAÇÕES =====================
 function getConfig() {
   return {
-    taxa: parseFloat(document.getElementById('cfg-taxa').value) || 0,
-    lucro_liq: parseFloat(document.getElementById('cfg-lucro').value) || 0,
-    dasn: parseFloat(document.getElementById('cfg-dasn').value) || 0,
+    taxa:     parseFloat(document.getElementById('cfg-taxa').value)  || 0,
+    lucro_liq:parseFloat(document.getElementById('cfg-lucro').value) || 0,
+    dasn:     parseFloat(document.getElementById('cfg-dasn').value)  || 0,
   };
 }
 
@@ -423,24 +975,24 @@ function renderRow(item, idx) {
                    calc.novo_lucro_pct > 0 ? 'calc-novo pct' : 'calc-novo pct-warn';
 
   return `<tr id="row-${item.id}" data-id="${item.id}">
-    <td class="seq">${idx + 1}</td>
+    <td class="seq"><input type="number" value="${item.num_item ?? idx + 1}" min="1" step="1" oninput="setField(${item.id},'num_item',+this.value)"></td>
     <td class="input-desc"><input type="text" value="${esc(item.descricao)}" placeholder="Descrição do produto..." oninput="setField(${item.id},'descricao',this.value)"></td>
     <td class="input-text" style="max-width:60px"><input type="text" value="${esc(item.unidade)}" placeholder="UND" oninput="setField(${item.id},'unidade',this.value)"></td>
     <td style="max-width:70px"><input type="number" value="${item.quantidade||''}" placeholder="0" min="0" step="any" oninput="setField(${item.id},'quantidade',this.value)"></td>
     <td class="input-text"><input type="text" value="${esc(item.fornecedor)}" placeholder="Fornecedor" oninput="setField(${item.id},'fornecedor',this.value)"></td>
     <td class="input-text"><input type="text" value="${esc(item.marca)}" placeholder="Marca" oninput="setField(${item.id},'marca',this.value)"></td>
-    <td style="max-width:120px"><div style="display:flex;align-items:center;gap:2px"><span style="color:#888;font-size:11px">R$</span><input type="text" value="${item.custo_unit ? fmtNumInput(item.custo_unit) : ''}" placeholder="0,00" oninput="setFieldBRL(${item.id},'custo_unit',this)" style="text-align:right;flex:1"></div></td>
+    <td style="max-width:120px"><div style="display:flex;align-items:center;gap:2px"><span style="color:var(--muted);font-size:10px">R$</span><input type="text" value="${item.custo_unit ? fmtNumInput(item.custo_unit) : ''}" placeholder="0,00" oninput="setFieldBRL(${item.id},'custo_unit',this)" style="text-align:right;flex:1"></div></td>
     <td class="calc">${fmtBRL(calc.custo_total)}</td>
     <td class="calc">${fmtBRL(calc.preco_venda_unit)}</td>
     <td class="calc">${fmtBRL(calc.preco_total)}</td>
     <td class="calc pct">${fmtPct(calc.lucro_bruto_pct)}</td>
-    <td style="max-width:110px"><input type="number" value="${item.novo_lance||''}" placeholder="0,00" min="0" step="any" oninput="setField(${item.id},'novo_lance',this.value)" style="text-align:right;background:#fff8f0"></td>
+    <td style="max-width:110px"><input type="number" value="${item.novo_lance||''}" placeholder="0,00" min="0" step="any" oninput="setField(${item.id},'novo_lance',this.value)" style="text-align:right"></td>
     <td class="calc-novo">${fmtBRL(calc.novo_total)}</td>
     <td class="${pctClass}">${fmtPct(calc.novo_lucro_pct)}</td>
     <td class="calc-res">${fmtBRL(calc.novo_lucro_rs)}</td>
     <td class="calc-res">${fmtBRL(calc.dasn_rs)}</td>
     <td class="calc-res">${fmtBRL(calc.custo_op)}</td>
-    <td style="text-align:center"><button class="btn-del" onclick="removeItem(${item.id})" title="Remover linha">&#10005;</button></td>
+    <td style="text-align:center"><button class="btn-del" onclick="removeItem(${item.id})" title="Remover">✕</button></td>
   </tr>`;
 }
 
@@ -451,8 +1003,7 @@ function esc(s) {
 
 // ===================== RENDERIZAR TUDO =====================
 function renderAll() {
-  const tbody = document.getElementById('tbody');
-  tbody.innerHTML = itens.map((item, idx) => renderRow(item, idx)).join('');
+  document.getElementById('tbody').innerHTML = itens.map((item, idx) => renderRow(item, idx)).join('');
   updateTotals();
   updateConfigLabel();
 }
@@ -460,60 +1011,51 @@ function renderAll() {
 // ===================== TOTAIS =====================
 function updateTotals() {
   let tot = {
-    custo_unit_sum: 0, custo_total: 0, preco_total: 0,
-    novo_total: 0, novo_lucro_rs: 0, lucro_liq_rs: 0, dasn_rs: 0, custo_op: 0
+    custo_total: 0, preco_total: 0, novo_total: 0,
+    novo_lucro_rs: 0, lucro_liq_rs: 0, dasn_rs: 0, custo_op: 0
   };
 
   itens.forEach(item => {
     const c = calcItem(item);
-    const qtd = parseFloat(item.quantidade) || 0;
-    const custo_unit = parseFloat(item.custo_unit) || 0;
-    tot.custo_unit_sum += custo_unit * qtd;
-    tot.custo_total += c.custo_total;
-    tot.preco_total += c.preco_total;
-    tot.novo_total += c.novo_total;
+    tot.custo_total   += c.custo_total;
+    tot.preco_total   += c.preco_total;
+    tot.novo_total    += c.novo_total;
     tot.novo_lucro_rs += c.novo_lucro_rs;
-    tot.lucro_liq_rs += c.lucro_liq_rs;
-    tot.dasn_rs += c.dasn_rs;
-    tot.custo_op += c.custo_op;
+    tot.lucro_liq_rs  += c.lucro_liq_rs;
+    tot.dasn_rs       += c.dasn_rs;
+    tot.custo_op      += c.custo_op;
   });
 
-  const novo_lucro_pct_total = tot.novo_total > 0 ? tot.novo_lucro_rs / tot.novo_total * 100 : 0;
+  const pct = tot.novo_total > 0 ? tot.novo_lucro_rs / tot.novo_total * 100 : 0;
 
-  // Tabela
-  document.getElementById('tot-custo-unit').textContent = fmtBRL(tot.custo_total);
-  document.getElementById('tot-custo-total').textContent = fmtBRL(tot.custo_total);
-  document.getElementById('tot-preco-total').textContent = fmtBRL(tot.preco_total);
-  document.getElementById('tot-novo-total').textContent = fmtBRL(tot.novo_total);
-  document.getElementById('tot-novo-lucro-pct').textContent = fmtPct(novo_lucro_pct_total);
-  document.getElementById('tot-novo-lucro-rs').textContent = fmtBRL(tot.novo_lucro_rs);
-  document.getElementById('tot-dasn-rs').textContent = fmtBRL(tot.dasn_rs);
-  document.getElementById('tot-custo-op').textContent = fmtBRL(tot.custo_op);
+  document.getElementById('tot-custo-unit').textContent     = fmtBRL(tot.custo_total);
+  document.getElementById('tot-custo-total').textContent    = fmtBRL(tot.custo_total);
+  document.getElementById('tot-preco-total').textContent    = fmtBRL(tot.preco_total);
+  document.getElementById('tot-novo-total').textContent     = fmtBRL(tot.novo_total);
+  document.getElementById('tot-novo-lucro-pct').textContent = fmtPct(pct);
+  document.getElementById('tot-novo-lucro-rs').textContent  = fmtBRL(tot.novo_lucro_rs);
+  document.getElementById('tot-dasn-rs').textContent        = fmtBRL(tot.dasn_rs);
+  document.getElementById('tot-custo-op').textContent       = fmtBRL(tot.custo_op);
 
-  // Barra flutuante
-  document.getElementById('ft-custo').textContent = fmtBRL(tot.custo_total);
-  document.getElementById('ft-preco').textContent = fmtBRL(tot.preco_total);
-  document.getElementById('ft-novo').textContent = fmtBRL(tot.novo_total);
-  document.getElementById('ft-pct').textContent = fmtPct(novo_lucro_pct_total);
-  document.getElementById('ft-dasn').textContent = fmtBRL(tot.dasn_rs);
-  document.getElementById('ft-itens').textContent = itens.length;
+  document.getElementById('ft-custo').textContent  = fmtBRL(tot.custo_total);
+  document.getElementById('ft-preco').textContent  = fmtBRL(tot.preco_total);
+  document.getElementById('ft-novo').textContent   = fmtBRL(tot.novo_total);
+  document.getElementById('ft-pct').textContent    = fmtPct(pct);
+  document.getElementById('ft-dasn').textContent   = fmtBRL(tot.dasn_rs);
+  document.getElementById('ft-itens').textContent  = itens.length;
 }
 
 // ===================== FORMATAÇÃO BRL INPUT =====================
 function fmtNumInput(v) {
-  // Formata número para exibição no input: ex: 1389,00
   if (!v && v !== 0) return '';
   return parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function setFieldBRL(id, field, input) {
-  // Permite digitar números com vírgula (pt-BR)
   let raw = input.value.replace(/[^\d,]/g, '');
-  // Garante apenas uma vírgula
   const parts = raw.split(',');
   if (parts.length > 2) raw = parts[0] + ',' + parts.slice(1).join('');
   input.value = raw;
-  // Converte para float para cálculo
   const numVal = parseFloat(raw.replace(',', '.')) || 0;
   const item = itens.find(i => i.id === id);
   if (item) {
@@ -540,18 +1082,13 @@ function setFieldBRL(id, field, input) {
   }
 }
 
-// ===================== AÇÕES =====================
+// ===================== AÇÕES DE ITEM =====================
 let nextId = 1;
 
 function addItem() {
-  itens.push({
-    id: nextId++,
-    descricao: '', unidade: 'UND', quantidade: '',
-    fornecedor: '', marca: '', custo_unit: '', novo_lance: ''
-  });
+  itens.push({ id: nextId++, num_item: itens.length + 1, descricao: '', unidade: 'UND', quantidade: '', fornecedor: '', marca: '', custo_unit: '', novo_lance: '' });
   renderAll();
   markDirty();
-  // foca no último input de descrição
   const rows = document.querySelectorAll('#tbody tr');
   if (rows.length > 0) {
     const lastInput = rows[rows.length - 1].querySelector('input[type=text]');
@@ -569,12 +1106,10 @@ function setField(id, field, value) {
   const item = itens.find(i => i.id === id);
   if (item) {
     item[field] = value;
-    // recalcula só a linha
     const row = document.getElementById('row-' + id);
     if (row) {
       const calc = calcItem(item);
       const cells = row.cells;
-      // Posições: 0=#, 1=desc, 2=und, 3=qtd, 4=forn, 5=marca, 6=custo_unit (input), 7=custo_total, 8=preco_unit, 9=preco_total, 10=lucro_bruto, 11=novo_lance, 12=novo_total, 13=novo_lucro_pct, 14=novo_lucro_rs, 15=lucro_liq_rs, 16=dasn_rs, 17=custo_op
       cells[7].textContent = fmtBRL(calc.custo_total);
       cells[8].textContent = fmtBRL(calc.preco_venda_unit);
       cells[9].textContent = fmtBRL(calc.preco_total);
@@ -593,26 +1128,24 @@ function setField(id, field, value) {
   }
 }
 
-function recalcAll() {
-  renderAll();
-  updateConfigLabel();
-}
+function recalcAll() { renderAll(); updateConfigLabel(); }
 
 // ===================== SUJO/SALVO =====================
 function markDirty() {
   dirty = true;
-  document.getElementById('status-label').innerHTML = '&#128992; Não salvo';
-  document.getElementById('status-label').style.color = '#c0392b';
+  document.getElementById('status-label').innerHTML =
+    '<span class="status-dot" style="background:var(--orange);box-shadow:0 0 6px var(--orange)"></span> Não salvo';
 }
 function markClean() {
   dirty = false;
-  document.getElementById('status-label').innerHTML = '&#128994; Salvo';
-  document.getElementById('status-label').style.color = '#1e8449';
+  document.getElementById('status-label').innerHTML =
+    '<span class="status-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)"></span> Salvo';
 }
 
 // ===================== SALVAR =====================
 async function salvar() {
   const data = buildPayload();
+  if (currentComposicaoId) data.id = currentComposicaoId;
   try {
     const r = await fetch('/api/save', {
       method: 'POST',
@@ -620,59 +1153,142 @@ async function salvar() {
       body: JSON.stringify(data)
     });
     if (r.ok) {
+      const result = await r.json();
+      currentComposicaoId = result.id;
       showToast('Salvo com sucesso!');
       markClean();
-    } else {
-      showToast('Erro ao salvar!', true);
-    }
-  } catch(e) {
-    showToast('Erro de conexão!', true);
+      await atualizarLista();
+    } else { showToast('Erro ao salvar!', true); }
+  } catch(e) { showToast('Erro de conexão!', true); }
+}
+
+// ===================== LISTA =====================
+async function atualizarLista() {
+  try {
+    const r = await fetch('/api/composicoes');
+    renderLista(await r.json());
+  } catch(e) {}
+}
+
+function renderLista(composicoes) {
+  const el = document.getElementById('lista-composicoes');
+  if (!composicoes || composicoes.length === 0) {
+    el.innerHTML = '<div class="lista-vazia">Nenhuma composição salva ainda.<br>Preencha os dados acima e clique em Salvar.</div>';
+    return;
   }
+  el.innerHTML = composicoes.map(c => {
+    const ativo = c.id === currentComposicaoId ? 'ativo' : '';
+    const nItens = c.num_itens === 1 ? '1 item' : `${c.num_itens} itens`;
+    return `<div class="lista-item ${ativo}" id="lista-${c.id}">
+      <div class="lista-item-info">
+        <strong>${esc(c.titulo)}</strong>
+        <small>${formatarData(c.atualizado_em)}</small>
+      </div>
+      <span class="lista-item-badge">${nItens}</span>
+      <div class="lista-item-actions">
+        <button class="btn btn-primary btn-sm" onclick="editarComposicao('${c.id}')">✎ Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="deletarComposicao('${c.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function editarComposicao(id) {
+  if (dirty && !confirm('Há alterações não salvas. Deseja continuar sem salvar?')) return;
+  try {
+    const r = await fetch(`/api/composicoes/${id}`);
+    if (!r.ok) { showToast('Erro ao carregar!', true); return; }
+    const comp = await r.json();
+    currentComposicaoId = comp.id;
+    document.getElementById('titulo-input').value = comp.titulo || '';
+    document.getElementById('num-pregao').value   = comp.num_pregao  || '';
+    document.getElementById('num-processo').value = comp.num_processo || '';
+    if (comp.config) {
+      document.getElementById('cfg-taxa').value   = comp.config.taxa ?? '';
+      document.getElementById('cfg-lucro').value  = comp.config.lucro_liq ?? '';
+      document.getElementById('cfg-dasn').value   = comp.config.dasn ?? '';
+    }
+    itens = (comp.itens || []).map(i => ({ ...i, id: nextId++ }));
+    renderAll();
+    markClean();
+    document.querySelectorAll('.lista-item').forEach(el => el.classList.remove('ativo'));
+    const activeEl = document.getElementById('lista-' + id);
+    if (activeEl) activeEl.classList.add('ativo');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch(e) { showToast('Erro ao carregar!', true); }
+}
+
+async function deletarComposicao(id) {
+  if (!confirm('Deseja excluir esta composição permanentemente?')) return;
+  try {
+    const r = await fetch(`/api/composicoes/${id}`, { method: 'DELETE' });
+    if (r.ok) {
+      if (currentComposicaoId === id) {
+        currentComposicaoId = null;
+        itens = []; nextId = 1;
+        document.getElementById('titulo-input').value = 'COMPOSIÇÃO DE PREÇOS - LICITAÇÃO';
+        document.getElementById('num-pregao').value   = '';
+        document.getElementById('num-processo').value = '';
+        renderAll(); markClean();
+      }
+      await atualizarLista();
+      showToast('Composição excluída!');
+    }
+  } catch(e) { showToast('Erro ao excluir!', true); }
+}
+
+function novaComposicao() {
+  if (dirty && !confirm('Há alterações não salvas. Deseja continuar sem salvar?')) return;
+  itens = []; nextId = 1;
+  currentComposicaoId = null;
+  document.getElementById('titulo-input').value = 'COMPOSIÇÃO DE PREÇOS - LICITAÇÃO';
+  document.getElementById('num-pregao').value   = '';
+  document.getElementById('num-processo').value = '';
+  document.getElementById('cfg-taxa').value  = '7';
+  document.getElementById('cfg-lucro').value = '9';
+  document.getElementById('cfg-dasn').value  = '3';
+  renderAll(); markClean();
+  document.querySelectorAll('.lista-item').forEach(el => el.classList.remove('ativo'));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ===================== EXPORTAR EXCEL =====================
 async function exportarExcel() {
-  const data = buildPayload();
   showToast('Gerando Excel...');
   try {
     const r = await fetch('/api/export/excel', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      body: JSON.stringify(buildPayload())
     });
     if (r.ok) {
       const blob = await r.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = 'composicao_precos.xlsx';
-      a.click();
+      a.href = url; a.download = 'composicao_precos.xlsx'; a.click();
       URL.revokeObjectURL(url);
       showToast('Excel exportado!');
     } else {
       const err = await r.json();
       showToast(err.error || 'Erro ao exportar!', true);
     }
-  } catch(e) {
-    showToast('Erro ao exportar!', true);
-  }
+  } catch(e) { showToast('Erro ao exportar!', true); }
 }
 
 // ===================== LIMPAR =====================
 function limparTudo() {
   if (!confirm('Tem certeza que deseja apagar todos os itens?')) return;
-  itens = [];
-  nextId = 1;
-  renderAll();
-  markDirty();
+  itens = []; nextId = 1;
+  renderAll(); markDirty();
 }
 
 // ===================== PAYLOAD =====================
 function buildPayload() {
-  const c = getConfig();
   return {
     titulo: document.getElementById('titulo-input').value,
-    config: c,
+    num_pregao: document.getElementById('num-pregao').value,
+    num_processo: document.getElementById('num-processo').value,
+    config: getConfig(),
     itens: itens.map(i => ({ ...i }))
   };
 }
@@ -680,25 +1296,18 @@ function buildPayload() {
 // ===================== CARREGAR =====================
 async function carregar() {
   try {
-    const r = await fetch('/api/data');
-    const data = await r.json();
-
-    if (data.titulo) {
-      document.getElementById('titulo-input').value = data.titulo;
+    const r = await fetch('/api/composicoes');
+    const composicoes = await r.json();
+    renderLista(composicoes);
+    if (composicoes.length > 0) {
+      await editarComposicao(composicoes[composicoes.length - 1].id);
+    } else {
+      document.getElementById('cfg-taxa').value  = '7';
+      document.getElementById('cfg-lucro').value = '9';
+      document.getElementById('cfg-dasn').value  = '3';
+      renderAll(); markClean();
     }
-    if (data.config) {
-      document.getElementById('cfg-taxa').value = data.config.taxa ?? '';
-      document.getElementById('cfg-lucro').value = data.config.lucro_liq ?? '';
-      document.getElementById('cfg-dasn').value = data.config.dasn ?? '';
-    }
-    if (data.itens && data.itens.length > 0) {
-      itens = data.itens.map(i => ({ ...i, id: nextId++ }));
-    }
-    renderAll();
-    markClean();
-  } catch(e) {
-    console.error('Erro ao carregar:', e);
-  }
+  } catch(e) { console.error('Erro ao carregar:', e); }
 }
 
 // ===================== TOAST =====================
@@ -710,25 +1319,279 @@ function showToast(msg, isError = false) {
   t._timer = setTimeout(() => { t.className = ''; }, 2500);
 }
 
-// ===================== ATALHO TECLADO =====================
+// ===================== ATALHOS =====================
 document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-    e.preventDefault();
-    salvar();
-  }
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-    addItem();
-  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); salvar(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { addItem(); }
 });
-
 window.addEventListener('beforeunload', e => {
-  if (dirty) {
-    e.preventDefault();
-    e.returnValue = '';
-  }
+  if (dirty) { e.preventDefault(); e.returnValue = ''; }
 });
 
-// ===================== INIT =====================
+// ===================== TEMA =====================
+function aplicarTema(tema) {
+  document.documentElement.setAttribute('data-theme', tema);
+  document.getElementById('btn-tema').textContent = tema === 'dark' ? '☀️ Claro' : '🌙 Escuro';
+  localStorage.setItem('tema', tema);
+}
+function toggleTema() {
+  const atual = document.documentElement.getAttribute('data-theme') || 'dark';
+  aplicarTema(atual === 'dark' ? 'light' : 'dark');
+}
+
+// ===================== MODAL SELEÇÃO ITENS =====================
+function abrirModalGerar() {
+  if (itens.length === 0) { showToast('Adicione itens antes de gerar o documento!', true); return; }
+
+  const lista = document.getElementById('modal-lista-itens');
+  lista.innerHTML = itens.map((item, idx) => `
+    <label class="modal-item">
+      <input type="checkbox" class="chk-item" value="${item.id}" checked>
+      <span class="modal-item-num">${idx + 1}</span>
+      <span class="modal-item-desc">${item.descricao || '(sem descrição)'}</span>
+      <span class="modal-item-qtd">${item.quantidade || 0} ${item.unidade || ''}</span>
+    </label>`).join('');
+
+  document.getElementById('chk-todos').checked = true;
+  document.getElementById('modal-gerar').classList.add('open');
+}
+
+function fecharModalGerar(e) {
+  if (e.target === document.getElementById('modal-gerar'))
+    document.getElementById('modal-gerar').classList.remove('open');
+}
+
+function toggleTodosItens(checked) {
+  document.querySelectorAll('.chk-item').forEach(c => c.checked = checked);
+}
+
+function confirmarGerar() {
+  const selecionados = [...document.querySelectorAll('.chk-item:checked')].map(c => parseInt(c.value));
+  if (selecionados.length === 0) { showToast('Selecione ao menos um item!', true); return; }
+  document.getElementById('modal-gerar').classList.remove('open');
+  const itensSelecionados = itens.filter(i => selecionados.includes(i.id));
+  gerarDocumento(itensSelecionados);
+}
+
+// ===================== GERAR DOCUMENTO =====================
+function gerarDocumento(itensSelecionados) {
+  if (!itensSelecionados || itensSelecionados.length === 0) { showToast('Nenhum item selecionado!', true); return; }
+
+  const cfg = getConfig();
+  const numPregao  = document.getElementById('num-pregao').value  || '___/____';
+  const numProcesso = document.getElementById('num-processo').value || '____________';
+
+  // Acumular totais apenas dos itens selecionados
+  let totCustoTotal = 0, totNovoTotal = 0, totLucroLiqRs = 0, totDasnRs = 0, totCustoOp = 0;
+  const calcs = itensSelecionados.map(item => {
+    const c = calcItem(item);
+    totCustoTotal  += c.custo_total;
+    totNovoTotal   += c.novo_total;
+    totLucroLiqRs  += c.lucro_liq_rs;
+    totDasnRs      += c.dasn_rs;
+    totCustoOp     += c.custo_op;
+    return c;
+  });
+
+  const totLucroLiqPct = totNovoTotal > 0 ? (totLucroLiqRs / totNovoTotal * 100) : 0;
+
+  const linhasTabela = itensSelecionados.map((item, idx) => {
+    const c = calcs[idx];
+    const qtd = parseFloat(item.quantidade) || 0;
+    const lance = parseFloat(item.novo_lance) || 0;
+    return `<tr>
+      <td>${idx + 1}</td>
+      <td style="text-align:left;padding-left:6px">${item.descricao || ''}</td>
+      <td>${item.unidade || ''}</td>
+      <td>${qtd % 1 === 0 ? qtd.toFixed(0) : fmtNum(qtd, 3)}</td>
+      <td>${fmtNum(parseFloat(item.custo_unit) || 0, 3)}</td>
+      <td>${fmtNum(c.custo_total, 3)}</td>
+      <td>${fmtNum(lance, 2)}</td>
+      <td>${fmtNum(c.novo_total, 2)}</td>
+      <td>${fmtPct(c.novo_lucro_pct)}</td>
+      <td>${fmtNum(c.lucro_liq_rs, 2)}</td>
+      <td>${fmtNum(c.dasn_rs, 2)}</td>
+      <td>${fmtNum(c.custo_op, 2)}</td>
+    </tr>`;
+  }).join('');
+
+  const legendaItens = itensSelecionados.map((item, idx) =>
+    `<div>CUSTO DE AQUISIÇÃO ITEM ${idx + 1}: R$${fmtNum(parseFloat(item.custo_unit) || 0, 2)}</div>`
+  ).join('');
+
+  const logoUrl   = empresaInfo.logo_path ? `/static/${empresaInfo.logo_path}` : '';
+  const nomeEmp   = (empresaInfo.nome || '').toUpperCase();
+  const cnpj      = empresaInfo.cnpj      || '';
+  const resp      = empresaInfo.responsavel || '';
+  const doc       = empresaInfo.documento  || '';
+  const endereco  = empresaInfo.endereco   || '';
+  const telefone  = empresaInfo.telefone   || '';
+  const site      = empresaInfo.site       || '';
+
+  const empresaConfig = {
+    logo:       logoUrl,
+    logoAlt:    empresaInfo.nome || '',
+    nomeTabela: nomeEmp,
+    assinatura: `${nomeEmp}<br>CNPJ nº ${cnpj}<br>${resp}<br>${doc}`,
+    footerInfo: [
+      cnpj      ? `CNPJ: ${cnpj}`         : '',
+      endereco  ? `Endereço: ${endereco}`  : '',
+      telefone  ? `Tel: ${telefone}`       : '',
+      site      ? `Site: ${site}`          : '',
+    ].filter(Boolean).join('<br>'),
+  };
+
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Planilha de Composição de Custos</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:Arial,sans-serif;font-size:11px;color:#000;background:#fff}
+  .page{padding:28px 28px 20px;max-width:1050px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+
+  /* Header */
+  .doc-header{display:flex;align-items:center;border-bottom:2px solid #333;padding-bottom:14px;margin-bottom:18px}
+  .logo-area{min-width:160px}
+  .logo-area img{height:60px;width:auto;display:block}
+  .doc-title{flex:1;text-align:center}
+  .doc-title h1{font-size:15px;font-weight:bold;letter-spacing:.5px}
+
+  /* Info pregão */
+  .doc-info{margin-bottom:14px}
+  .doc-info p{font-size:12px;font-weight:600;margin-bottom:2px}
+
+  /* Tabela */
+  table{width:100%;border-collapse:collapse;margin-bottom:18px;font-size:9.5px}
+  table th,table td{border:1px solid #999;padding:4px 4px;text-align:center}
+  table thead tr.h-empresa th{background:#1a5f7a;color:#fff;font-size:10px;font-weight:bold;letter-spacing:1px;padding:4px}
+  table thead tr.h-pct th{background:#c8d4e0;font-size:9px;font-weight:600;color:#444;padding:2px 4px}
+  table thead tr.h-col th{background:#d6dfe9;font-size:9px;font-weight:bold;line-height:1.3}
+  table tbody tr:nth-child(even){background:#f5f7fa}
+  table tfoot td{font-weight:bold;background:#e8ecf2;text-align:center}
+
+  /* Legenda */
+  .legenda{margin-bottom:28px}
+  .legenda h3{font-size:13px;font-weight:bold;margin-bottom:8px}
+  .legenda div{font-size:12px;font-weight:600;margin-bottom:3px}
+
+  /* Assinatura */
+  .assinatura{text-align:center;margin:36px 0 28px}
+  .assinatura .linha{border-top:1px solid #333;width:68%;margin:0 auto 10px}
+  .assinatura p{font-size:12px;font-weight:bold;line-height:1.9}
+
+  /* Footer */
+  .spacer{flex:1}
+  .doc-footer{border-top:4px solid #1a5f7a;padding-top:9px;display:flex;justify-content:space-between;align-items:center;margin-top:auto}
+  .footer-info{font-size:10px;line-height:1.8;color:#333}
+  .footer-logo img{height:44px;width:auto;display:block}
+
+  @media print{
+    body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .page{padding:15px}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="doc-header">
+    <div class="logo-area">
+      <img src="${empresaConfig.logo}" alt="${empresaConfig.logoAlt}">
+    </div>
+    <div class="doc-title">
+      <h1>PLANILHA DE COMPOSIÇÃO DE CUSTOS</h1>
+    </div>
+  </div>
+
+  <div class="doc-info">
+    <p>PREGÃO ELETRÔNICO ${numPregao}</p>
+    <p>PROCESSO ADMINISTRATIVO ${numProcesso}</p>
+  </div>
+
+  <table>
+    <thead>
+      <tr class="h-empresa">
+        <th colspan="4"></th>
+        <th colspan="8">${empresaConfig.nomeTabela}</th>
+      </tr>
+      <tr class="h-pct">
+        <th colspan="10"></th>
+        <th>${fmtNum(cfg.dasn, 2)}%</th>
+        <th>${fmtNum(cfg.taxa, 2)}%</th>
+      </tr>
+      <tr class="h-col">
+        <th>Item</th>
+        <th>DESCRIÇÃO</th>
+        <th>Und</th>
+        <th>Quant</th>
+        <th>CUSTO UNIT.<br>DE AQUISIÇÃO</th>
+        <th>CUSTO TOTAL<br>DE AQUISIÇÃO</th>
+        <th>NOVO LANCE<br>UNITÁRIO</th>
+        <th>NOVO LANCE<br>TOTAL</th>
+        <th>NOVO LUCRO<br>LÍQUIDO</th>
+        <th>LUCRO<br>LÍQUIDO R$</th>
+        <th>DASN</th>
+        <th>CUSTO<br>OPERACIONAL</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${linhasTabela}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="4" style="letter-spacing:2px">T O T A I S</td>
+        <td></td>
+        <td>${fmtNum(totCustoTotal, 3)}</td>
+        <td></td>
+        <td>${fmtNum(totNovoTotal, 2)}</td>
+        <td>${fmtPct(totLucroLiqPct)}</td>
+        <td>${fmtNum(totLucroLiqRs, 2)}</td>
+        <td>${fmtNum(totDasnRs, 2)}</td>
+        <td>${fmtNum(totCustoOp, 2)}</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="legenda">
+    <h3>Legenda</h3>
+    ${legendaItens}
+    <div>VALOR TOTAL: R$${fmtNum(totNovoTotal, 2)}</div>
+    <div>LUCRO LÍQUIDO: R$ ${fmtNum(totLucroLiqRs, 2)} (${fmtPct(totLucroLiqPct)})</div>
+    <div>IMPOSTO(DASN): R$ ${fmtNum(totDasnRs, 2)} (${fmtNum(cfg.dasn, 0)}%)</div>
+    <div>CUSTO OPERACIONAL : R$ ${fmtNum(totCustoOp, 2)} (${fmtNum(cfg.taxa, 0)}%)</div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="assinatura">
+    <div class="linha"></div>
+    <p>${empresaConfig.assinatura}</p>
+  </div>
+
+  <div class="doc-footer">
+    <div class="footer-info">${empresaConfig.footerInfo}</div>
+    <div class="footer-logo">
+      <img src="${empresaConfig.logo}" alt="${empresaConfig.logoAlt}">
+    </div>
+  </div>
+
+</div>
+<script>window.onload = () => window.print();<\/script>
+</body>
+</html>`;
+
+  const w = window.open('', '_blank');
+  if (!w) { showToast('Permita popups para gerar o documento!', true); return; }
+  w.document.write(html);
+  w.document.close();
+}
+
+// Aplica tema salvo ou escuro por padrão
+aplicarTema(localStorage.getItem('tema') || 'dark');
+
+carregarEmpresaInfo();
 carregar();
 </script>
 </body>
