@@ -68,6 +68,36 @@ def save():
     return jsonify({'status': 'ok', 'id': c.id})
 
 
+@api_bp.route('/produtos', methods=['GET'])
+@login_required
+def buscar_produtos():
+    q = request.args.get('q', '').strip().lower()
+    if len(q) < 2:
+        return jsonify([])
+
+    composicoes = Composicao.query.filter_by(empresa_id=current_user.id)\
+                                  .order_by(Composicao.atualizado_em.desc()).all()
+
+    vistos = {}
+    for comp in composicoes:
+        for item in comp.get_itens():
+            desc = (item.get('descricao') or '').strip()
+            if not desc:
+                continue
+            chave = desc.lower()
+            if q in chave and chave not in vistos:
+                vistos[chave] = {
+                    'descricao':  desc,
+                    'unidade':    item.get('unidade', ''),
+                    'fornecedor': item.get('fornecedor', ''),
+                    'marca':      item.get('marca', ''),
+                    'custo_unit': item.get('custo_unit', ''),
+                }
+
+    resultados = sorted(vistos.values(), key=lambda x: x['descricao'].lower())
+    return jsonify(resultados[:10])
+
+
 @api_bp.route('/empresa/info', methods=['GET'])
 @login_required
 def empresa_info():
