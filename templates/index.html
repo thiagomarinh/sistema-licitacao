@@ -700,6 +700,30 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
   table { border: 1px solid #ccc; }
   td, th { border: 1px solid #ccc; color: #000 !important; background: #fff !important; }
 }
+
+/* ── AUTOCOMPLETE ── */
+#ac-dropdown {
+  position: fixed;
+  z-index: 9999;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  min-width: 340px;
+  max-width: 520px;
+  overflow: hidden;
+  display: none;
+}
+.ac-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background .1s;
+}
+.ac-item:last-child { border-bottom: none; }
+.ac-item:hover, .ac-item.focused { background: var(--accent-dim); }
+.ac-item-desc { font-size: 13px; font-weight: 600; color: var(--text); }
+.ac-item-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -868,6 +892,7 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
 </div>
 
 <div id="toast"></div>
+<div id="ac-dropdown"></div>
 
 <script>
 // ===================== ESTADO =====================
@@ -967,7 +992,7 @@ function renderRow(item, idx) {
 
   return `<tr id="row-${item.id}" data-id="${item.id}">
     <td class="seq"><input type="number" value="${item.num_item ?? idx + 1}" min="1" step="1" oninput="setField(${item.id},'num_item',+this.value)"></td>
-    <td class="input-desc"><input type="text" value="${esc(item.descricao)}" placeholder="Descrição do produto..." oninput="setField(${item.id},'descricao',this.value)"></td>
+    <td class="input-desc"><input type="text" value="${esc(item.descricao)}" placeholder="Descrição do produto..." oninput="setField(${item.id},'descricao',this.value)" data-ac-id="${item.id}" autocomplete="off"></td>
     <td class="input-text" style="max-width:60px"><input type="text" value="${esc(item.unidade)}" placeholder="UND" oninput="setField(${item.id},'unidade',this.value)"></td>
     <td style="max-width:70px"><input type="number" value="${item.quantidade||''}" placeholder="0" min="0" step="any" oninput="setField(${item.id},'quantidade',this.value)"></td>
     <td class="input-text"><input type="text" value="${esc(item.fornecedor)}" placeholder="Fornecedor" oninput="setField(${item.id},'fornecedor',this.value)"></td>
@@ -995,6 +1020,9 @@ function esc(s) {
 // ===================== RENDERIZAR TUDO =====================
 function renderAll() {
   document.getElementById('tbody').innerHTML = itens.map((item, idx) => renderRow(item, idx)).join('');
+  document.querySelectorAll('[data-ac-id]').forEach(input => {
+    ac.attach(input, parseInt(input.dataset.acId));
+  });
   updateTotals();
   updateConfigLabel();
 }
@@ -1238,6 +1266,99 @@ function showToast(msg, isError = false) {
   clearTimeout(t._timer);
   t._timer = setTimeout(() => { t.className = ''; }, 2500);
 }
+
+// ===================== AUTOCOMPLETE =====================
+const ac = {
+  dropdown: null,
+  currentInput: null,
+  currentItemId: null,
+  timer: null,
+  focusedIdx: -1,
+  items: [],
+
+  init() {
+    this.dropdown = document.getElementById('ac-dropdown');
+    document.addEventListener('click', e => {
+      if (!this.dropdown.contains(e.target)) this.hide();
+    });
+    document.addEventListener('keydown', e => {
+      if (!this.dropdown.style.display || this.dropdown.style.display === 'none') return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); this.moveFocus(1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); this.moveFocus(-1); }
+      else if (e.key === 'Enter' && this.focusedIdx >= 0) { e.preventDefault(); this.select(this.focusedIdx); }
+      else if (e.key === 'Escape') this.hide();
+    });
+  },
+
+  attach(input, itemId) {
+    input.addEventListener('input', () => {
+      this.currentInput = input;
+      this.currentItemId = itemId;
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => this.fetch(input.value), 200);
+    });
+    input.addEventListener('focus', () => {
+      this.currentInput = input;
+      this.currentItemId = itemId;
+      if (input.value.length >= 2) this.fetch(input.value);
+    });
+  },
+
+  async fetch(q) {
+    if (q.length < 2) { this.hide(); return; }
+    try {
+      const r = await fetch(`/api/produtos?q=${encodeURIComponent(q)}`);
+      this.items = await r.json();
+      this.render();
+    } catch(e) {}
+  },
+
+  render() {
+    if (!this.items.length) { this.hide(); return; }
+    this.focusedIdx = -1;
+    this.dropdown.innerHTML = this.items.map((p, i) => {
+      const meta = [p.unidade, p.fornecedor, p.marca].filter(Boolean).join(' · ');
+      return `<div class="ac-item" onmousedown="ac.select(${i})">
+        <div class="ac-item-desc">${esc(p.descricao)}</div>
+        ${meta ? `<div class="ac-item-meta">${esc(meta)}${p.custo_unit ? ' · R$ ' + fmtNumInput(parseFloat(p.custo_unit)) : ''}</div>` : ''}
+      </div>`;
+    }).join('');
+    this.position();
+    this.dropdown.style.display = 'block';
+  },
+
+  position() {
+    const rect = this.currentInput.getBoundingClientRect();
+    this.dropdown.style.top  = (rect.bottom + window.scrollY + 2) + 'px';
+    this.dropdown.style.left = (rect.left + window.scrollX) + 'px';
+  },
+
+  moveFocus(dir) {
+    const els = this.dropdown.querySelectorAll('.ac-item');
+    if (this.focusedIdx >= 0) els[this.focusedIdx].classList.remove('focused');
+    this.focusedIdx = Math.max(0, Math.min(els.length - 1, this.focusedIdx + dir));
+    els[this.focusedIdx].classList.add('focused');
+  },
+
+  select(idx) {
+    const p = this.items[idx];
+    if (!p || !this.currentItemId) return;
+    const id = this.currentItemId;
+    setField(id, 'descricao',  p.descricao);
+    setField(id, 'unidade',    p.unidade);
+    setField(id, 'fornecedor', p.fornecedor);
+    setField(id, 'marca',      p.marca);
+    setField(id, 'custo_unit', p.custo_unit ? parseFloat(p.custo_unit) : '');
+    renderAll();
+    this.hide();
+  },
+
+  hide() {
+    this.dropdown.style.display = 'none';
+    this.items = [];
+    this.focusedIdx = -1;
+  }
+};
 
 // ===================== ATALHOS =====================
 document.addEventListener('keydown', e => {
@@ -1511,6 +1632,7 @@ function gerarDocumento(itensSelecionados) {
 // Aplica tema salvo ou escuro por padrão
 aplicarTema(localStorage.getItem('tema') || 'dark');
 
+ac.init();
 carregarEmpresaInfo();
 carregar();
 </script>
