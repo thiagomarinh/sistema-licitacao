@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pregões — Composição de Preços</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:      #0D1117; --surface: #161B22; --surface2: #21262D;
+    --border:  #30363D; --border2: #3D444D;
+    --text:    #E6EDF3; --muted:   #8B949E;
+    --accent:  #58A6FF; --accent-dim: #1F6FEB22;
+    --green:   #3FB950; --green-dim:  #2EA04326;
+    --orange:  #E3B341; --orange-dim: #BB810026;
+    --red:     #F85149; --red-dim:    #F8514922;
+    --radius:  8px;
+  }
+  [data-theme="light"] {
+    --bg: #F6F8FA; --surface: #FFFFFF; --surface2: #F0F2F5;
+    --border: #D0D7DE; --border2: #B0BAC4;
+    --text: #1F2328; --muted: #636C76;
+    --accent-dim: #DDF4FF;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 13px; }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 20px; height: 56px; display: flex; align-items: center;
+    justify-content: space-between; position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 10px; }
+  .topbar-brand h1 { font-size: 15px; font-weight: 700; }
+  .topbar-brand h1 span { color: var(--accent); }
+  .topbar-nav { display: flex; gap: 4px; }
+  .nav-link {
+    padding: 6px 14px; border-radius: var(--radius); font-size: 13px; font-weight: 600;
+    text-decoration: none; color: var(--muted); transition: all .15s;
+  }
+  .nav-link:hover { color: var(--text); background: var(--surface2); }
+  .nav-link.ativo { color: var(--accent); background: var(--accent-dim); }
+  .topbar-actions { display: flex; align-items: center; gap: 8px; }
+  .btn-sm {
+    padding: 5px 12px; border-radius: var(--radius); font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    cursor: pointer; text-decoration: none; font-family: inherit; transition: all .15s;
+  }
+  .btn-sm:hover { color: var(--text); border-color: var(--border2); }
+
+  /* LAYOUT */
+  .page { max-width: 1100px; margin: 0 auto; padding: 24px 20px; }
+
+  /* PAGE HEADER */
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;
+  }
+  .page-header h2 {
+    font-size: 16px; font-weight: 700; color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .page-header h2::before {
+    content: ''; display: inline-block; width: 3px; height: 18px;
+    background: var(--accent); border-radius: 2px;
+  }
+  .btn-new {
+    padding: 7px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 600;
+    background: var(--accent); color: #fff; border: none; cursor: pointer;
+    text-decoration: none; font-family: inherit; transition: background .15s;
+  }
+  .btn-new:hover { background: #388BFD; }
+
+  /* LISTA */
+  .lista-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 12px;
+  }
+
+  .lista-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s, box-shadow 0.15s;
+  }
+  .lista-item:hover {
+    border-color: var(--border2);
+    border-left-color: var(--accent);
+    background: var(--surface2);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+
+  .lista-item-info { flex: 1; min-width: 0; }
+  .lista-item-info strong {
+    display: block; font-size: 13px; font-weight: 600; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px;
+  }
+  .lista-item-info small { color: var(--muted); font-size: 11px; }
+
+  .lista-item-badge {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); font-size: 10px; font-weight: 600;
+    padding: 2px 8px; border-radius: 20px; white-space: nowrap;
+    text-transform: uppercase; letter-spacing: 0.4px; flex-shrink: 0;
+  }
+
+  .lista-item-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+  .btn-editar {
+    padding: 5px 12px; border-radius: var(--radius); font-size: 12px; font-weight: 600;
+    background: var(--accent-dim); color: var(--accent); border: 1px solid #58A6FF44;
+    cursor: pointer; text-decoration: none; font-family: inherit; transition: all .15s;
+    white-space: nowrap;
+  }
+  .btn-editar:hover { background: var(--accent); color: #fff; }
+  .btn-excluir {
+    padding: 5px 10px; border-radius: var(--radius); font-size: 12px; font-weight: 600;
+    background: transparent; color: var(--muted); border: 1px solid var(--border);
+    cursor: pointer; font-family: inherit; transition: all .15s;
+  }
+  .btn-excluir:hover { color: var(--red); border-color: var(--red); background: var(--red-dim); }
+
+  /* VAZIO */
+  .lista-vazia {
+    text-align: center; color: var(--muted); padding: 60px 20px; font-size: 13px;
+    background: var(--surface); border-radius: var(--radius);
+    border: 1px dashed var(--border); grid-column: 1 / -1;
+  }
+  .lista-vazia::before {
+    content: '📂'; display: block; font-size: 32px; margin-bottom: 12px;
+  }
+
+  /* TOAST */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--surface2); color: var(--text); padding: 10px 20px;
+    border-radius: 20px; font-size: 13px; font-weight: 500;
+    border: 1px solid var(--border); opacity: 0; transition: all .25s; z-index: 999;
+    pointer-events: none; white-space: nowrap;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.error { background: var(--red-dim); border-color: var(--red); color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div style="font-size:20px">📊</div>
+    <h1>Composição de <span>Preços</span> — Licitação</h1>
+  </div>
+  <nav class="topbar-nav">
+    <a href="/" class="nav-link">📋 Composições</a>
+    <a href="/pregoes/" class="nav-link ativo">🏷️ Pregões</a>
+    <a href="/documentos/" class="nav-link">📁 Documentos</a>
+  </nav>
+  <div class="topbar-actions">
+    <button class="btn-sm" id="btn-tema" onclick="toggleTema()"></button>
+    <span id="nome-empresa" style="font-size:12px;font-weight:600;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    <a href="/configuracoes" class="btn-sm" title="Configurações">⚙️</a>
+    <a href="/logout" class="btn-sm">Sair</a>
+  </div>
+</div>
+
+<div class="page">
+  <div class="page-header">
+    <h2>Pregões Salvos</h2>
+    <a href="/" class="btn-new">+ Nova Composição</a>
+  </div>
+  <div class="lista-grid" id="lista-composicoes">
+    <div class="lista-vazia">Carregando...</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ===================== TEMA =====================
+function aplicarTema(tema) {
+  document.documentElement.setAttribute('data-theme', tema);
+  document.getElementById('btn-tema').textContent = tema === 'dark' ? '☀️ Claro' : '🌙 Escuro';
+  localStorage.setItem('tema', tema);
+}
+function toggleTema() {
+  const atual = document.documentElement.getAttribute('data-theme') || 'dark';
+  aplicarTema(atual === 'dark' ? 'light' : 'dark');
+}
+
+// ===================== TOAST =====================
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = isError ? 'show error' : 'show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.className = ''; }, 2500);
+}
+
+// ===================== UTILS =====================
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function formatarData(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+// ===================== LISTA =====================
+async function carregar() {
+  try {
+    const r = await fetch('/api/composicoes');
+    const composicoes = await r.json();
+    renderLista(composicoes);
+  } catch(e) {
+    document.getElementById('lista-composicoes').innerHTML =
+      '<div class="lista-vazia">Erro ao carregar composições.</div>';
+  }
+}
+
+function renderLista(composicoes) {
+  const el = document.getElementById('lista-composicoes');
+  if (!composicoes || composicoes.length === 0) {
+    el.innerHTML = '<div class="lista-vazia">Nenhum pregão salvo ainda.<br>Vá em Composições, preencha os dados e clique em Salvar.</div>';
+    return;
+  }
+  el.innerHTML = composicoes.map(c => {
+    const nItens = c.num_itens === 1 ? '1 item' : `${c.num_itens} itens`;
+    return `<div class="lista-item">
+      <div class="lista-item-info">
+        <strong>${esc(c.titulo)}</strong>
+        <small>${formatarData(c.atualizado_em)}</small>
+      </div>
+      <span class="lista-item-badge">${nItens}</span>
+      <div class="lista-item-actions">
+        <a class="btn-editar" href="/?id=${esc(c.id)}">✎ Editar</a>
+        <button class="btn-excluir" onclick="excluir('${esc(c.id)}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function excluir(id) {
+  if (!confirm('Deseja excluir esta composição permanentemente?')) return;
+  try {
+    const r = await fetch(`/api/composicoes/${id}`, { method: 'DELETE' });
+    if (r.ok) {
+      showToast('Composição excluída!');
+      await carregar();
+    } else { showToast('Erro ao excluir!', true); }
+  } catch(e) { showToast('Erro de conexão!', true); }
+}
+
+// ===================== EMPRESA =====================
+async function carregarEmpresa() {
+  try {
+    const r = await fetch('/api/empresa/info');
+    const e = await r.json();
+    document.getElementById('nome-empresa').textContent = e.nome || '';
+  } catch(e) {}
+}
+
+// ===================== INIT =====================
+const temaInicio = localStorage.getItem('tema') || 'dark';
+aplicarTema(temaInicio);
+carregar();
+carregarEmpresa();
+</script>
+</body>
+</html>

@@ -8,3 +8,9 @@ main_bp = Blueprint('main', __name__)
 @login_required
 def index():
     return render_template('index.html')
+
+
+@main_bp.route('/pregoes/')
+@login_required
+def pregoes():
+    return render_template('pregoes.html')

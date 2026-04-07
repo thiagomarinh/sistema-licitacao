@@ -712,6 +712,7 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
   </div>
   <nav style="display:flex;gap:4px">
     <a href="/" style="padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;color:var(--accent);background:var(--accent-dim)">📋 Composições</a>
+    <a href="/pregoes/" style="padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;color:var(--muted)">🏷️ Pregões</a>
     <a href="/documentos/" style="padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;color:var(--muted)">📁 Documentos</a>
   </nav>
   <div class="topbar-actions">
@@ -847,16 +848,6 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
   </div>
 </div>
 
-<!-- LISTA DE COMPOSIÇÕES -->
-<div class="composicoes-section">
-  <div class="composicoes-header">
-    <h2>Composições Salvas</h2>
-    <button class="btn btn-ghost btn-sm" onclick="novaComposicao()">+ Nova Composição</button>
-  </div>
-  <div class="lista-grid" id="lista-composicoes">
-    <div class="lista-vazia">Nenhuma composição salva ainda.<br>Preencha os dados acima e clique em Salvar.</div>
-  </div>
-</div>
 
 <!-- MODAL SELEÇÃO DE ITENS -->
 <div id="modal-gerar" class="modal-overlay" onclick="fecharModalGerar(event)">
@@ -1157,47 +1148,15 @@ async function salvar() {
       currentComposicaoId = result.id;
       showToast('Salvo com sucesso!');
       markClean();
-      await atualizarLista();
     } else { showToast('Erro ao salvar!', true); }
   } catch(e) { showToast('Erro de conexão!', true); }
 }
 
-// ===================== LISTA =====================
-async function atualizarLista() {
-  try {
-    const r = await fetch('/api/composicoes');
-    renderLista(await r.json());
-  } catch(e) {}
-}
-
-function renderLista(composicoes) {
-  const el = document.getElementById('lista-composicoes');
-  if (!composicoes || composicoes.length === 0) {
-    el.innerHTML = '<div class="lista-vazia">Nenhuma composição salva ainda.<br>Preencha os dados acima e clique em Salvar.</div>';
-    return;
-  }
-  el.innerHTML = composicoes.map(c => {
-    const ativo = c.id === currentComposicaoId ? 'ativo' : '';
-    const nItens = c.num_itens === 1 ? '1 item' : `${c.num_itens} itens`;
-    return `<div class="lista-item ${ativo}" id="lista-${c.id}">
-      <div class="lista-item-info">
-        <strong>${esc(c.titulo)}</strong>
-        <small>${formatarData(c.atualizado_em)}</small>
-      </div>
-      <span class="lista-item-badge">${nItens}</span>
-      <div class="lista-item-actions">
-        <button class="btn btn-primary btn-sm" onclick="editarComposicao('${c.id}')">✎ Editar</button>
-        <button class="btn btn-danger btn-sm" onclick="deletarComposicao('${c.id}')">🗑</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-async function editarComposicao(id) {
-  if (dirty && !confirm('Há alterações não salvas. Deseja continuar sem salvar?')) return;
+// ===================== CARREGAR COMPOSIÇÃO POR ID =====================
+async function carregarComposicao(id) {
   try {
     const r = await fetch(`/api/composicoes/${id}`);
-    if (!r.ok) { showToast('Erro ao carregar!', true); return; }
+    if (!r.ok) { showToast('Composição não encontrada!', true); return; }
     const comp = await r.json();
     currentComposicaoId = comp.id;
     document.getElementById('titulo-input').value = comp.titulo || '';
@@ -1211,45 +1170,7 @@ async function editarComposicao(id) {
     itens = (comp.itens || []).map(i => ({ ...i, id: nextId++ }));
     renderAll();
     markClean();
-    document.querySelectorAll('.lista-item').forEach(el => el.classList.remove('ativo'));
-    const activeEl = document.getElementById('lista-' + id);
-    if (activeEl) activeEl.classList.add('ativo');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch(e) { showToast('Erro ao carregar!', true); }
-}
-
-async function deletarComposicao(id) {
-  if (!confirm('Deseja excluir esta composição permanentemente?')) return;
-  try {
-    const r = await fetch(`/api/composicoes/${id}`, { method: 'DELETE' });
-    if (r.ok) {
-      if (currentComposicaoId === id) {
-        currentComposicaoId = null;
-        itens = []; nextId = 1;
-        document.getElementById('titulo-input').value = 'COMPOSIÇÃO DE PREÇOS - LICITAÇÃO';
-        document.getElementById('num-pregao').value   = '';
-        document.getElementById('num-processo').value = '';
-        renderAll(); markClean();
-      }
-      await atualizarLista();
-      showToast('Composição excluída!');
-    }
-  } catch(e) { showToast('Erro ao excluir!', true); }
-}
-
-function novaComposicao() {
-  if (dirty && !confirm('Há alterações não salvas. Deseja continuar sem salvar?')) return;
-  itens = []; nextId = 1;
-  currentComposicaoId = null;
-  document.getElementById('titulo-input').value = 'COMPOSIÇÃO DE PREÇOS - LICITAÇÃO';
-  document.getElementById('num-pregao').value   = '';
-  document.getElementById('num-processo').value = '';
-  document.getElementById('cfg-taxa').value  = '7';
-  document.getElementById('cfg-lucro').value = '9';
-  document.getElementById('cfg-dasn').value  = '3';
-  renderAll(); markClean();
-  document.querySelectorAll('.lista-item').forEach(el => el.classList.remove('ativo'));
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ===================== EXPORTAR EXCEL =====================
@@ -1296,11 +1217,10 @@ function buildPayload() {
 // ===================== CARREGAR =====================
 async function carregar() {
   try {
-    const r = await fetch('/api/composicoes');
-    const composicoes = await r.json();
-    renderLista(composicoes);
-    if (composicoes.length > 0) {
-      await editarComposicao(composicoes[composicoes.length - 1].id);
+    const params = new URLSearchParams(window.location.search);
+    const idParam = params.get('id');
+    if (idParam) {
+      await carregarComposicao(idParam);
     } else {
       document.getElementById('cfg-taxa').value  = '7';
       document.getElementById('cfg-lucro').value = '9';
