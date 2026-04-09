@@ -245,6 +245,43 @@ body {
 }
 .pregao-item input[type=text]:focus { border-bottom-color: var(--accent); }
 
+/* PAINEL DECLARAÇÕES */
+.decl-panel {
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.decl-panel-label {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--muted); white-space: nowrap;
+}
+.decl-panel-lista {
+  display: flex; gap: 6px; flex-wrap: wrap; flex: 1;
+}
+.decl-chip {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 12px; font-size: 12px;
+  color: var(--text);
+}
+.decl-chip-nome { font-weight: 500; }
+.btn-decl-gerar {
+  background: var(--green); color: #fff; border: none;
+  border-radius: 12px; padding: 3px 10px; font-size: 11px;
+  font-weight: 700; cursor: pointer; font-family: inherit;
+  text-decoration: none; transition: background .15s; white-space: nowrap;
+}
+.btn-decl-gerar:hover { background: #2EA043; }
+.decl-empty {
+  font-size: 12px; color: var(--muted);
+}
+.decl-empty a { color: var(--accent); text-decoration: none; font-weight: 600; }
+.decl-empty a:hover { text-decoration: underline; }
+
 .titulo-group {
   display: flex;
   align-items: center;
@@ -738,6 +775,7 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
     <a href="/" style="padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;color:var(--accent);background:var(--accent-dim)">📋 Composições</a>
     <a href="/pregoes/" style="padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;color:var(--muted)">🏷️ Pregões</a>
     <a href="/documentos/" style="padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;color:var(--muted)">📁 Documentos</a>
+    <a href="/declaracoes/" style="padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;color:var(--muted)">📄 Declarações</a>
   </nav>
   <div class="topbar-actions">
     <button class="btn btn-success" onclick="salvar()">💾 Salvar</button>
@@ -791,6 +829,14 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
   <div class="pregao-item">
     <label for="num-processo">Nº DO PROCESSO</label>
     <input type="text" id="num-processo" placeholder="Ex: 2026.001.000123" oninput="markDirty()">
+  </div>
+</div>
+
+<!-- DECLARAÇÕES DO PREGÃO -->
+<div class="decl-panel" id="decl-panel">
+  <span class="decl-panel-label">📄 Gerar declaração</span>
+  <div class="decl-panel-lista" id="decl-lista">
+    <span class="decl-empty" id="decl-loading">Carregando...</span>
   </div>
 </div>
 
@@ -899,6 +945,39 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
 let itens = [];
 let dirty = false;
 let currentComposicaoId = null;
+
+// ===================== DECLARAÇÕES =====================
+async function carregarDeclaracoes() {
+  try {
+    const r = await fetch('/api/declaracoes');
+    const lista = r.ok ? await r.json() : [];
+    const container = document.getElementById('decl-lista');
+    if (!lista.length) {
+      container.innerHTML = '<span class="decl-empty">Nenhum template cadastrado. <a href="/declaracoes/">Adicionar declarações →</a></span>';
+      return;
+    }
+    container.innerHTML = lista.map(d =>
+      `<span class="decl-chip">
+        <span class="decl-chip-nome">${d.nome}</span>
+        <a class="btn-decl-gerar" href="#" onclick="gerarDeclaracao('${d.id}', event)">⬇ Gerar</a>
+      </span>`
+    ).join('');
+  } catch(e) {
+    document.getElementById('decl-lista').innerHTML =
+      '<span class="decl-empty"><a href="/declaracoes/">Gerenciar declarações →</a></span>';
+  }
+}
+
+function gerarDeclaracao(declId, e) {
+  e.preventDefault();
+  const numPregao  = document.getElementById('num-pregao').value.trim();
+  const numProcesso = document.getElementById('num-processo').value.trim();
+  const params = new URLSearchParams();
+  if (numPregao)   params.set('num_pregao',  numPregao);
+  if (numProcesso) params.set('num_processo', numProcesso);
+  const url = `/declaracoes/gerar/${declId}${params.toString() ? '?' + params.toString() : ''}`;
+  window.location.href = url;
+}
 let empresaInfo = {};
 
 // ===================== EMPRESA =====================
@@ -1634,6 +1713,7 @@ aplicarTema(localStorage.getItem('tema') || 'dark');
 
 ac.init();
 carregarEmpresaInfo();
+carregarDeclaracoes();
 carregar();
 </script>
 </body>

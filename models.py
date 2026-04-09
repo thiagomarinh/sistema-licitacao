@@ -24,8 +24,9 @@ class Empresa(UserMixin, db.Model):
     logo_path    = db.Column(db.String(300))  # caminho relativo em static/logos/
     criado_em    = db.Column(db.DateTime, default=datetime.utcnow)
 
-    composicoes  = db.relationship('Composicao', backref='empresa', lazy=True, cascade='all, delete-orphan')
-    documentos   = db.relationship('Documento',  backref='empresa', lazy=True, cascade='all, delete-orphan')
+    composicoes  = db.relationship('Composicao',  backref='empresa', lazy=True, cascade='all, delete-orphan')
+    documentos   = db.relationship('Documento',   backref='empresa', lazy=True, cascade='all, delete-orphan')
+    declaracoes  = db.relationship('Declaracao',  backref='empresa', lazy=True, cascade='all, delete-orphan')
 
     def set_senha(self, senha):
         self.senha_hash = generate_password_hash(senha)
@@ -64,6 +65,22 @@ class Composicao(db.Model):
             'criado_em':    self.criado_em.isoformat() if self.criado_em else '',
             'atualizado_em':self.atualizado_em.isoformat() if self.atualizado_em else '',
         }
+
+
+class Declaracao(db.Model):
+    __tablename__ = 'declaracoes'
+
+    id           = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    empresa_id   = db.Column(db.String(36), db.ForeignKey('empresas.id'), nullable=False)
+    nome         = db.Column(db.String(300), nullable=False)
+    arquivo_path = db.Column(db.String(500))   # template original .docx
+    arquivo_nome = db.Column(db.String(300))
+    gerada_em    = db.Column(db.DateTime)
+    criado_em    = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def nunca_gerada(self):
+        return self.gerada_em is None
 
 
 class Documento(db.Model):

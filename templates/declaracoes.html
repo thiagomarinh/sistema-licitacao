@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Licita - Declarações</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:      #0D1117; --surface: #161B22; --surface2: #21262D;
+    --border:  #30363D; --border2: #3D444D;
+    --text:    #E6EDF3; --muted:   #8B949E;
+    --accent:  #58A6FF; --accent-dim: #1F6FEB22;
+    --green:   #3FB950; --green-dim:  #2EA04326;
+    --orange:  #E3B341; --orange-dim: #BB810026;
+    --red:     #F85149; --red-dim:    #F8514922;
+    --purple:  #BC8CFF; --purple-dim: #6E40C922;
+    --radius:  8px;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 13px; }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 20px; height: 56px; display: flex; align-items: center;
+    justify-content: space-between; position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 10px; }
+  .topbar-brand h1 { font-size: 15px; font-weight: 700; }
+  .topbar-nav { display: flex; gap: 4px; }
+  .nav-link {
+    padding: 6px 14px; border-radius: var(--radius); font-size: 13px; font-weight: 600;
+    text-decoration: none; color: var(--muted); transition: all .15s;
+  }
+  .nav-link:hover { color: var(--text); background: var(--surface2); }
+  .nav-link.ativo { color: var(--accent); background: var(--accent-dim); }
+  .topbar-actions { display: flex; align-items: center; gap: 8px; }
+  .btn-sm {
+    padding: 5px 12px; border-radius: var(--radius); font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    cursor: pointer; text-decoration: none; font-family: inherit; transition: all .15s;
+  }
+  .btn-sm:hover { color: var(--text); border-color: var(--border2); }
+
+  /* LAYOUT */
+  .page { max-width: 900px; margin: 0 auto; padding: 24px 20px; }
+
+  /* AVISO DADOS FALTANDO */
+  .aviso {
+    background: var(--orange-dim); border: 1px solid var(--orange);
+    border-radius: 10px; padding: 14px 18px; margin-bottom: 24px;
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .aviso-icon { font-size: 18px; flex-shrink: 0; }
+  .aviso-texto { font-size: 13px; color: var(--orange); line-height: 1.6; }
+  .aviso-texto strong { display: block; margin-bottom: 2px; }
+  .aviso-link { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .aviso-link:hover { text-decoration: underline; }
+
+  /* GUIA DE MARCADORES */
+  .guia-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; margin-bottom: 24px;
+  }
+  .guia-header {
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; user-select: none;
+  }
+  .guia-header h3 { font-size: 13px; font-weight: 700; color: var(--muted); }
+  .guia-toggle { font-size: 11px; color: var(--accent); font-weight: 600; }
+  .guia-body { display: none; margin-top: 14px; }
+  .guia-body.aberto { display: block; }
+  .guia-intro { font-size: 12px; color: var(--muted); margin-bottom: 12px; line-height: 1.6; }
+  .marcadores-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
+  .marcador-item {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 8px 12px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .marcador-code {
+    font-family: monospace; font-size: 12px; color: var(--purple);
+    background: var(--purple-dim); border-radius: 4px; padding: 2px 6px;
+  }
+  .marcador-desc { font-size: 12px; color: var(--muted); }
+
+  /* UPLOAD CARD */
+  .upload-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; margin-bottom: 24px;
+  }
+  .upload-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 16px; color: var(--muted); }
+  .upload-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
+  .field label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+  .field input {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 8px 10px; font-size: 13px;
+    color: var(--text); font-family: inherit; outline: none; transition: border-color .15s;
+  }
+  .field input:focus { border-color: var(--accent); }
+  .field input[type=file] { padding: 6px 10px; color: var(--muted); cursor: pointer; }
+  .btn-upload {
+    background: var(--accent); color: #fff; border: none; border-radius: var(--radius);
+    padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: inherit; white-space: nowrap; transition: background .15s; height: 36px;
+  }
+  .btn-upload:hover { background: #388BFD; }
+
+  /* LISTA */
+  .decl-list { display: flex; flex-direction: column; gap: 8px; }
+  .decl-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; display: flex; align-items: center; gap: 14px; transition: border-color .15s;
+  }
+  .decl-card:hover { border-color: var(--border2); }
+  .decl-icon { font-size: 24px; flex-shrink: 0; }
+  .decl-info { flex: 1; min-width: 0; }
+  .decl-nome { font-size: 14px; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .decl-meta { font-size: 12px; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
+  .decl-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  .btn-gerar {
+    padding: 6px 16px; border-radius: var(--radius); font-size: 12px; font-weight: 600;
+    border: none; background: var(--green); color: #fff;
+    text-decoration: none; cursor: pointer; font-family: inherit; transition: background .15s;
+  }
+  .btn-gerar:hover { background: #2EA043; }
+  .btn-action {
+    padding: 5px 12px; border-radius: var(--radius); font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    text-decoration: none; cursor: pointer; font-family: inherit; transition: all .15s;
+  }
+  .btn-action:hover { color: var(--text); border-color: var(--border2); }
+  .btn-action.danger:hover { color: var(--red); border-color: var(--red); background: var(--red-dim); }
+
+  .badge-nova {
+    padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700;
+    background: var(--purple-dim); color: var(--purple); border: 1px solid var(--purple);
+  }
+  .badge-gerada {
+    padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700;
+    background: var(--green-dim); color: var(--green); border: 1px solid var(--green);
+  }
+
+  .vazio {
+    text-align: center; padding: 60px 20px; color: var(--muted);
+    background: var(--surface); border: 1px dashed var(--border); border-radius: 12px;
+  }
+  .vazio p { font-size: 14px; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <div>📄</div>
+    <h1>Declarações</h1>
+  </div>
+  <nav class="topbar-nav">
+    <a href="/" class="nav-link">📋 Composições</a>
+    <a href="/pregoes/" class="nav-link">🏷️ Pregões</a>
+    <a href="/documentos/" class="nav-link">📁 Documentos</a>
+    <a href="/declaracoes/" class="nav-link ativo">📄 Declarações</a>
+  </nav>
+  <div class="topbar-actions">
+    <span style="font-size:12px;font-weight:600;color:var(--muted)">{{ current_user.nome }}</span>
+    <a href="/configuracoes" class="btn-sm" title="Configurações">⚙️</a>
+    <a href="/logout" class="btn-sm">Sair</a>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- AVISO DADOS FALTANDO -->
+  {% if campos_faltando %}
+  <div class="aviso">
+    <div class="aviso-icon">⚠️</div>
+    <div class="aviso-texto">
+      <strong>Dados incompletos no cadastro — declarações podem sair com campos em branco</strong>
+      Faltando: {{ campos_faltando | join(', ') }}.
+      <a href="/configuracoes" class="aviso-link">Completar agora →</a>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- GUIA DE MARCADORES -->
+  <div class="guia-card">
+    <div class="guia-header" onclick="toggleGuia()">
+      <h3>📌 Como preparar o template (.docx)</h3>
+      <span class="guia-toggle" id="guiaToggleBtn">Mostrar marcadores ▼</span>
+    </div>
+    <div class="guia-body" id="guiaBody">
+      <p class="guia-intro">
+        Abra sua declaração no Word e substitua os dados variáveis pelos marcadores abaixo
+        (com as chaves duplas). O sistema preencherá automaticamente ao gerar.
+      </p>
+      <div class="marcadores-grid">
+        <div class="marcador-item">
+          <span class="marcador-code">{{ '{{nome_empresa}}' }}</span>
+          <span class="marcador-desc">Nome da empresa</span>
+        </div>
+        <div class="marcador-item">
+          <span class="marcador-code">{{ '{{cnpj}}' }}</span>
+          <span class="marcador-desc">CNPJ</span>
+        </div>
+        <div class="marcador-item">
+          <span class="marcador-code">{{ '{{responsavel}}' }}</span>
+          <span class="marcador-desc">Nome do responsável/sócio</span>
+        </div>
+        <div class="marcador-item">
+          <span class="marcador-code">{{ '{{cpf}}' }}</span>
+          <span class="marcador-desc">CPF / RG do responsável</span>
+        </div>
+        <div class="marcador-item">
+          <span class="marcador-code">{{ '{{endereco}}' }}</span>
+          <span class="marcador-desc">Endereço completo</span>
+        </div>
+        <div class="marcador-item">
+          <span class="marcador-code">{{ '{{telefone}}' }}</span>
+          <span class="marcador-desc">Telefone</span>
+        </div>
+        <div class="marcador-item">
+          <span class="marcador-code">{{ '{{data}}' }}</span>
+          <span class="marcador-desc">Data atual (DD/MM/AAAA)</span>
+        </div>
+        <div class="marcador-item">
+          <span class="marcador-code">{{ '{{data_extenso}}' }}</span>
+          <span class="marcador-desc">Ex: 9 de abril de 2026</span>
+        </div>
+        <div class="marcador-item">
+          <span class="marcador-code">{{ '{{num_pregao}}' }}</span>
+          <span class="marcador-desc">Nº do Pregão (da composição)</span>
+        </div>
+        <div class="marcador-item">
+          <span class="marcador-code">{{ '{{num_processo}}' }}</span>
+          <span class="marcador-desc">Nº do Processo Administrativo</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="upload-card">
+    <h3>📤 Adicionar declaração (template .docx)</h3>
+    <form method="POST" action="/declaracoes/upload" enctype="multipart/form-data">
+      <div class="upload-grid">
+        <div class="field">
+          <label>Nome da declaração</label>
+          <input type="text" name="nome" placeholder="Ex: Declaração de Habilitação">
+        </div>
+        <div class="field">
+          <label>Arquivo Word (.docx)</label>
+          <input type="file" name="arquivo" accept=".docx" required>
+        </div>
+        <div>
+          <button type="submit" class="btn-upload">+ Adicionar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- LISTA -->
+  <div class="decl-list">
+    {% if decls %}
+      {% for decl in decls %}
+      <div class="decl-card">
+        <div class="decl-icon">📝</div>
+        <div class="decl-info">
+          <div class="decl-nome">{{ decl.nome }}</div>
+          <div class="decl-meta">
+            <span>Adicionada em {{ decl.criado_em.strftime('%d/%m/%Y') }}</span>
+            {% if decl.gerada_em %}
+              <span>Última geração: {{ decl.gerada_em.strftime('%d/%m/%Y às %H:%M') }}</span>
+            {% endif %}
+          </div>
+        </div>
+        <div>
+          {% if decl.nunca_gerada %}
+            <span class="badge-nova">Nunca gerada</span>
+          {% else %}
+            <span class="badge-gerada">Gerada</span>
+          {% endif %}
+        </div>
+        <div class="decl-actions">
+          <a href="/declaracoes/gerar/{{ decl.id }}" class="btn-gerar">⬇ Gerar preenchida</a>
+          <form method="POST" action="/declaracoes/deletar/{{ decl.id }}" style="display:inline"
+                onsubmit="return confirm('Excluir esta declaração?')">
+            <button type="submit" class="btn-action danger">🗑</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="vazio">
+        <div style="font-size:40px">📄</div>
+        <p>Nenhuma declaração cadastrada ainda.<br>
+           Prepare seu template .docx com os marcadores e faça o upload acima.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+  function toggleGuia() {
+    var body = document.getElementById('guiaBody');
+    var btn  = document.getElementById('guiaToggleBtn');
+    var aberto = body.classList.toggle('aberto');
+    btn.textContent = aberto ? 'Ocultar ▲' : 'Mostrar marcadores ▼';
+  }
+</script>
+
+</body>
+</html>
