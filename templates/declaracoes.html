@@ -107,24 +107,41 @@
   .btn-upload:hover { background: #388BFD; }
 
   /* LISTA */
+  .decl-list-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .decl-list-header-left { display: flex; align-items: center; gap: 10px; }
+  .chk-todos-label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer;
+  }
+  .chk-todos-label input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+
+  .btn-gerar-sel {
+    padding: 7px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 600;
+    border: none; background: var(--green); color: #fff;
+    cursor: pointer; font-family: inherit; transition: background .15s;
+    display: none;
+  }
+  .btn-gerar-sel.visivel { display: inline-block; }
+  .btn-gerar-sel:hover { background: #2EA043; }
+
   .decl-list { display: flex; flex-direction: column; gap: 8px; }
   .decl-card {
     background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-    padding: 14px 16px; display: flex; align-items: center; gap: 14px; transition: border-color .15s;
+    padding: 14px 16px; display: flex; align-items: center; gap: 14px;
+    transition: border-color .15s; cursor: pointer;
   }
   .decl-card:hover { border-color: var(--border2); }
+  .decl-card.selecionado { border-color: var(--accent); background: var(--accent-dim); }
+  .decl-chk { flex-shrink: 0; accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
   .decl-icon { font-size: 24px; flex-shrink: 0; }
   .decl-info { flex: 1; min-width: 0; }
   .decl-nome { font-size: 14px; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .decl-meta { font-size: 12px; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
   .decl-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
-  .btn-gerar {
-    padding: 6px 16px; border-radius: var(--radius); font-size: 12px; font-weight: 600;
-    border: none; background: var(--green); color: #fff;
-    text-decoration: none; cursor: pointer; font-family: inherit; transition: background .15s;
-  }
-  .btn-gerar:hover { background: #2EA043; }
   .btn-action {
     padding: 5px 12px; border-radius: var(--radius); font-size: 12px; font-weight: 600;
     border: 1px solid var(--border); background: transparent; color: var(--muted);
@@ -275,10 +292,26 @@
   </div>
 
   <!-- LISTA -->
+  {% if decls %}
+  <div class="decl-list-header">
+    <div class="decl-list-header-left">
+      <label class="chk-todos-label">
+        <input type="checkbox" id="chk-todos" onchange="toggleTodos(this.checked)">
+        Selecionar todas
+      </label>
+    </div>
+    <button class="btn-gerar-sel" id="btn-gerar-sel" onclick="gerarSelecionadas()">
+      ⬇ Gerar declarações
+    </button>
+  </div>
+  {% endif %}
+
   <div class="decl-list">
     {% if decls %}
       {% for decl in decls %}
-      <div class="decl-card">
+      <div class="decl-card" id="card-{{ decl.id }}" onclick="toggleCard('{{ decl.id }}')">
+        <input type="checkbox" class="decl-chk" id="chk-{{ decl.id }}"
+               value="{{ decl.id }}" onclick="event.stopPropagation()" onchange="atualizarBotao()">
         <div class="decl-icon">📝</div>
         <div class="decl-info">
           <div class="decl-nome">{{ decl.nome }}</div>
@@ -297,9 +330,8 @@
           {% endif %}
         </div>
         <div class="decl-actions">
-          <a href="/declaracoes/gerar/{{ decl.id }}" class="btn-gerar">⬇ Gerar preenchida</a>
           <form method="POST" action="/declaracoes/deletar/{{ decl.id }}" style="display:inline"
-                onsubmit="return confirm('Excluir esta declaração?')">
+                onsubmit="return confirm('Excluir esta declaração?')" onclick="event.stopPropagation()">
             <button type="submit" class="btn-action danger">🗑</button>
           </form>
         </div>
@@ -323,6 +355,82 @@
     var aberto = body.classList.toggle('aberto');
     btn.textContent = aberto ? 'Ocultar ▲' : 'Mostrar marcadores ▼';
   }
+
+  function toggleCard(id) {
+    var chk  = document.getElementById('chk-' + id);
+    var card = document.getElementById('card-' + id);
+    chk.checked = !chk.checked;
+    card.classList.toggle('selecionado', chk.checked);
+    atualizarBotao();
+  }
+
+  function toggleTodos(checked) {
+    document.querySelectorAll('.decl-chk').forEach(function(chk) {
+      chk.checked = checked;
+      document.getElementById('card-' + chk.value).classList.toggle('selecionado', checked);
+    });
+    atualizarBotao();
+  }
+
+  function atualizarBotao() {
+    var selecionados = document.querySelectorAll('.decl-chk:checked').length;
+    var btn = document.getElementById('btn-gerar-sel');
+    if (btn) {
+      btn.classList.toggle('visivel', selecionados > 0);
+      btn.textContent = selecionados > 1
+        ? '⬇ Gerar ' + selecionados + ' declarações'
+        : '⬇ Gerar declaração';
+    }
+    // Atualiza o "selecionar todas"
+    var total = document.querySelectorAll('.decl-chk').length;
+    var chkTodos = document.getElementById('chk-todos');
+    if (chkTodos) chkTodos.checked = (selecionados === total && total > 0);
+  }
+
+  function gerarSelecionadas() {
+    var ids = [...document.querySelectorAll('.decl-chk:checked')].map(function(c) { return c.value; });
+    if (!ids.length) return;
+
+    var btn = document.getElementById('btn-gerar-sel');
+    btn.textContent = '⏳ Gerando...';
+    btn.disabled = true;
+
+    fetch('/declaracoes/gerar-multiplas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: ids })
+    })
+    .then(function(r) {
+      if (!r.ok) return r.json().then(function(d) { throw new Error(d.erro || 'Erro ao gerar.'); });
+      return r.blob();
+    })
+    .then(function(blob) {
+      var ext  = blob.type === 'application/pdf' ? '.pdf' : '.docx';
+      var url  = URL.createObjectURL(blob);
+      var link = document.createElement('a');
+      link.href = url;
+      link.download = 'declaracoes-preenchidas' + ext;
+      link.click();
+      URL.revokeObjectURL(url);
+      // Recarrega para atualizar os badges "Gerada"
+      setTimeout(function() { location.reload(); }, 800);
+    })
+    .catch(function(err) {
+      alert('Erro: ' + err.message);
+    })
+    .finally(function() {
+      btn.disabled = false;
+      atualizarBotao();
+    });
+  }
+
+  // Sincroniza classe selecionado ao carregar (em caso de refresh)
+  document.querySelectorAll('.decl-chk').forEach(function(chk) {
+    chk.addEventListener('change', function() {
+      document.getElementById('card-' + chk.value).classList.toggle('selecionado', chk.checked);
+      atualizarBotao();
+    });
+  });
 </script>
 
 </body>

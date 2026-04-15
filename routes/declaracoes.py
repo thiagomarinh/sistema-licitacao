@@ -4,10 +4,12 @@ import traceback
 import tempfile
 import subprocess
 from datetime import datetime, date
-from flask import Blueprint, render_template, request, redirect, url_for, send_file, abort, flash
+from flask import Blueprint, render_template, request, redirect, url_for, send_file, abort, flash, jsonify
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from docxtpl import DocxTemplate
+from docxcompose.composer import Composer
+from docx import Document
 import fitz  # PyMuPDF
 from models import db, Declaracao
 
@@ -225,6 +227,116 @@ def gerar(decl_id):
         download_name=nome_download,
         mimetype=mimetype,
     )
+
+
+@decl_bp.route('/gerar-multiplas', methods=['POST'])
+@login_required
+def gerar_multiplas():
+    ids = request.json.get('ids', [])
+    if not ids:
+        return jsonify({'erro': 'Nenhuma declaração selecionada.'}), 400
+
+    e = current_user
+    hoje = date.today()
+    num_pregao   = request.json.get('num_pregao',   '')
+    num_processo = request.json.get('num_processo', '')
+
+    contexto = {
+        'nome_empresa': e.nome or '',
+        'cnpj':         e.cnpj or '',
+        'responsavel':  e.responsavel or '',
+        'cpf':          e.documento or '',
+        'rg':           e.rg or '',
+        'endereco':     e.endereco or '',
+        'telefone':     e.telefone or '',
+        'data':         hoje.strftime('%d/%m/%Y'),
+        'data_extenso': _data_extenso(hoje),
+        'cidade':       _extrair_cidade(e.endereco),
+        'num_pregao':   num_pregao,
+        'num_processo': num_processo,
+    }
+
+    decls = Declaracao.query.filter(
+        Declaracao.id.in_(ids),
+        Declaracao.empresa_id == current_user.id
+    ).all()
+
+    if not decls:
+        return jsonify({'erro': 'Declarações não encontradas.'}), 404
+
+    try:
+        # Separa por tipo
+        docs_docx = []
+        docs_pdf  = []
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            for i, decl in enumerate(decls):
+                if not decl.arquivo_path:
+                    continue
+                caminho = os.path.join(
+                    os.path.dirname(os.path.dirname(__file__)),
+                    'static', decl.arquivo_path
+                )
+                if not os.path.exists(caminho):
+                    continue
+
+                ext = os.path.splitext(decl.arquivo_path.lower())[1]
+
+                if ext == '.pdf':
+                    buf = _preencher_pdf(caminho, contexto)
+                    docs_pdf.append(buf)
+                else:
+                    tpl = DocxTemplate(caminho)
+                    tpl.render(contexto)
+                    path_tmp = os.path.join(tmpdir, f'decl_{i}.docx')
+                    tpl.save(path_tmp)
+                    docs_docx.append(path_tmp)
+
+            # Atualiza gerada_em
+            for decl in decls:
+                decl.gerada_em = datetime.utcnow()
+            db.session.commit()
+
+            # Mescla PDFs
+            if docs_pdf:
+                merged = fitz.open()
+                for buf in docs_pdf:
+                    src = fitz.open(stream=buf, filetype='pdf')
+                    merged.insert_pdf(src)
+                    src.close()
+                buffer = io.BytesIO()
+                merged.save(buffer, garbage=4, deflate=True)
+                merged.close()
+                buffer.seek(0)
+                return send_file(
+                    buffer,
+                    as_attachment=True,
+                    download_name='declaracoes-preenchidas.pdf',
+                    mimetype='application/pdf',
+                )
+
+            # Mescla DOCXs
+            if docs_docx:
+                master = Document(docs_docx[0])
+                composer = Composer(master)
+                for path in docs_docx[1:]:
+                    doc = Document(path)
+                    composer.append(doc)
+                buffer = io.BytesIO()
+                master.save(buffer)
+                buffer.seek(0)
+                return send_file(
+                    buffer,
+                    as_attachment=True,
+                    download_name='declaracoes-preenchidas.docx',
+                    mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                )
+
+    except Exception as err:
+        traceback.print_exc()
+        return jsonify({'erro': str(err)}), 500
+
+    return jsonify({'erro': 'Nenhum arquivo gerado.'}), 400
 
 
 @decl_bp.route('/deletar/<decl_id>', methods=['POST'])
