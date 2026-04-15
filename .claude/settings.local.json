@@ -4,7 +4,11 @@
       "Bash(python -c \"from app import app; print\\(''OK''\\)\")",
       "Bash(pip install:*)",
       "Bash(python -c \"from app import app; print\\('OK'\\)\")",
-      "Bash(python -c ':*)"
+      "Bash(python -c ':*)",
+      "Bash(where soffice:*)",
+      "Read(//c/Program Files/LibreOffice/program/**)",
+      "Read(//c/Program Files \\(x86\\)/LibreOffice/program/**)",
+      "Bash(pip show:*)"
     ]
   }
 }

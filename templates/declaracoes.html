@@ -171,6 +171,16 @@
 
 <div class="page">
 
+  <!-- FLASH MESSAGES -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="aviso" style="{% if category == 'error' %}border-color:var(--red);background:var(--red-dim){% endif %}">
+      <div class="aviso-icon">{% if category == 'error' %}❌{% else %}ℹ️{% endif %}</div>
+      <div class="aviso-texto" style="{% if category == 'error' %}color:var(--red){% endif %}">{{ message }}</div>
+    </div>
+    {% endfor %}
+  {% endwith %}
+
   <!-- AVISO DADOS FALTANDO -->
   {% if campos_faltando %}
   <div class="aviso">
@@ -191,8 +201,9 @@
     </div>
     <div class="guia-body" id="guiaBody">
       <p class="guia-intro">
-        Abra sua declaração no Word e substitua os dados variáveis pelos marcadores abaixo
-        (com as chaves duplas). O sistema preencherá automaticamente ao gerar.
+        Abra sua declaração (no Word ou em qualquer editor de PDF) e substitua os dados variáveis
+        pelos marcadores abaixo (com as chaves duplas). O sistema preencherá automaticamente ao gerar.<br>
+        <strong style="color:var(--accent)">Recomendado: envie em PDF</strong> — a formatação e o papel timbrado são preservados 100%.
       </p>
       <div class="marcadores-grid">
         <div class="marcador-item">
@@ -209,7 +220,11 @@
         </div>
         <div class="marcador-item">
           <span class="marcador-code">{{ '{{cpf}}' }}</span>
-          <span class="marcador-desc">CPF / RG do responsável</span>
+          <span class="marcador-desc">CPF do responsável</span>
+        </div>
+        <div class="marcador-item">
+          <span class="marcador-code">{{ '{{rg}}' }}</span>
+          <span class="marcador-desc">RG do responsável</span>
         </div>
         <div class="marcador-item">
           <span class="marcador-code">{{ '{{endereco}}' }}</span>
@@ -241,7 +256,7 @@
 
   <!-- UPLOAD -->
   <div class="upload-card">
-    <h3>📤 Adicionar declaração (template .docx)</h3>
+    <h3>📤 Adicionar declaração (template .pdf ou .docx)</h3>
     <form method="POST" action="/declaracoes/upload" enctype="multipart/form-data">
       <div class="upload-grid">
         <div class="field">
@@ -249,8 +264,8 @@
           <input type="text" name="nome" placeholder="Ex: Declaração de Habilitação">
         </div>
         <div class="field">
-          <label>Arquivo Word (.docx)</label>
-          <input type="file" name="arquivo" accept=".docx" required>
+          <label>Arquivo Word (.docx) ou PDF (.pdf)</label>
+          <input type="file" name="arquivo" accept=".docx,.pdf" required>
         </div>
         <div>
           <button type="submit" class="btn-upload">+ Adicionar</button>

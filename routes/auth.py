@@ -39,7 +39,8 @@ def cadastro():
             email       = email,
             cnpj        = request.form.get('cnpj', '').strip(),
             responsavel = request.form.get('responsavel', '').strip(),
-            documento   = request.form.get('documento', '').strip(),
+            documento   = request.form.get('cpf', '').strip(),
+            rg          = request.form.get('rg', '').strip(),
             endereco    = request.form.get('endereco', '').strip(),
             telefone    = request.form.get('telefone', '').strip(),
             site        = request.form.get('site', '').strip(),
@@ -84,7 +85,8 @@ def configuracoes():
             empresa.nome        = request.form.get('nome', '').strip()
             empresa.cnpj        = request.form.get('cnpj', '').strip()
             empresa.responsavel = request.form.get('responsavel', '').strip()
-            empresa.documento   = request.form.get('documento', '').strip()
+            empresa.documento   = request.form.get('cpf', '').strip()
+            empresa.rg          = request.form.get('rg', '').strip()
             empresa.endereco    = request.form.get('endereco', '').strip()
             empresa.telefone    = request.form.get('telefone', '').strip()
             empresa.site        = request.form.get('site', '').strip()

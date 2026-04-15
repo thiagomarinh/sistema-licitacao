@@ -17,7 +17,8 @@ class Empresa(UserMixin, db.Model):
     senha_hash   = db.Column(db.String(256), nullable=False)
     cnpj         = db.Column(db.String(20))
     responsavel  = db.Column(db.String(200))
-    documento    = db.Column(db.String(30))   # CPF ou RG do responsável
+    documento    = db.Column(db.String(30))   # CPF do responsável
+    rg           = db.Column(db.String(30))   # RG do responsável
     endereco     = db.Column(db.String(300))
     telefone     = db.Column(db.String(30))
     site         = db.Column(db.String(200))

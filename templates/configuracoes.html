@@ -177,9 +177,15 @@
         <input type="text" name="responsavel" value="{{ empresa.responsavel or '' }}">
       </div>
 
-      <div class="form-group">
-        <label>CPF / RG do Responsável</label>
-        <input type="text" name="documento" value="{{ empresa.documento or '' }}">
+      <div class="form-row">
+        <div class="form-group">
+          <label>CPF do Responsável</label>
+          <input type="text" name="cpf" value="{{ empresa.documento or '' }}" placeholder="000.000.000-00">
+        </div>
+        <div class="form-group">
+          <label>RG do Responsável</label>
+          <input type="text" name="rg" value="{{ empresa.rg or '' }}" placeholder="0.000.000">
+        </div>
       </div>
 
       <div class="form-group">
