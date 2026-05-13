@@ -542,6 +542,27 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
   padding: 12px 18px;
   border-top: 1px solid var(--border);
 }
+.modal-colunas-section {
+  border-top: 1px solid var(--border);
+  padding: 10px 18px 12px;
+  font-size: 12px;
+}
+.modal-colunas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.modal-colunas-header label { cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 400; color: var(--muted); }
+.modal-colunas-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 5px 12px;
+}
+.modal-colunas-grid label { cursor: pointer; display: flex; align-items: center; gap: 6px; color: var(--text); }
+.modal-colunas-grid input[type=checkbox] { accent-color: var(--accent); }
 
 /* ── TOTAIS BAR ── */
 .totais-bar {
@@ -886,6 +907,22 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
       <label><input type="checkbox" id="chk-todos" onchange="toggleTodosItens(this.checked)"> Selecionar todos</label>
     </div>
     <div class="modal-lista" id="modal-lista-itens"></div>
+    <div class="modal-colunas-section">
+      <div class="modal-colunas-header">
+        <span>Colunas na impressão</span>
+        <label><input type="checkbox" id="chk-todas-colunas" onchange="toggleTodasColunas(this.checked)" checked> Todas</label>
+      </div>
+      <div class="modal-colunas-grid">
+        <label><input type="checkbox" class="chk-col" value="custo_unit" checked> Custo Unit. Aquisição</label>
+        <label><input type="checkbox" class="chk-col" value="custo_total" checked> Custo Total Aquisição</label>
+        <label><input type="checkbox" class="chk-col" value="lance" checked> Lance Unitário</label>
+        <label><input type="checkbox" class="chk-col" value="novo_total" checked> Lance Total</label>
+        <label><input type="checkbox" class="chk-col" value="novo_lucro_pct" checked> Lucro Líq. %</label>
+        <label><input type="checkbox" class="chk-col" value="lucro_liq_rs" checked> Lucro Líq. R$</label>
+        <label><input type="checkbox" class="chk-col" value="dasn_rs" checked> DASN</label>
+        <label><input type="checkbox" class="chk-col" value="custo_op" checked> Custo Operacional</label>
+      </div>
+    </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="document.getElementById('modal-gerar').classList.remove('open')">Cancelar</button>
       <button class="btn btn-primary" onclick="confirmarGerar()">📋 Gerar documento</button>
@@ -1410,16 +1447,21 @@ function toggleTodosItens(checked) {
   document.querySelectorAll('.chk-item').forEach(c => c.checked = checked);
 }
 
+function toggleTodasColunas(checked) {
+  document.querySelectorAll('.chk-col').forEach(c => c.checked = checked);
+}
+
 function confirmarGerar() {
   const selecionados = [...document.querySelectorAll('.chk-item:checked')].map(c => parseInt(c.value));
   if (selecionados.length === 0) { showToast('Selecione ao menos um item!', true); return; }
+  const colsSelecionadas = [...document.querySelectorAll('.chk-col:checked')].map(c => c.value);
   document.getElementById('modal-gerar').classList.remove('open');
   const itensSelecionados = itens.filter(i => selecionados.includes(i.id));
-  gerarDocumento(itensSelecionados);
+  gerarDocumento(itensSelecionados, colsSelecionadas);
 }
 
 // ===================== GERAR DOCUMENTO =====================
-function gerarDocumento(itensSelecionados) {
+function gerarDocumento(itensSelecionados, colsSelecionadas) {
   if (!itensSelecionados || itensSelecionados.length === 0) { showToast('Nenhum item selecionado!', true); return; }
 
   const cfg = getConfig();
@@ -1440,25 +1482,53 @@ function gerarDocumento(itensSelecionados) {
 
   const totLucroLiqPct = totNovoTotal > 0 ? (totLucroLiqRs / totNovoTotal * 100) : 0;
 
+  // Definição das colunas financeiras opcionais
+  const COLS_FIN = [
+    { id: 'custo_unit',     label: 'CUSTO UNIT.<br>DE AQUISIÇÃO',  rowFn: (item,c) => fmtNum(parseFloat(item.custo_unit)||0,3), totFn: () => '' },
+    { id: 'custo_total',    label: 'CUSTO TOTAL<br>DE AQUISIÇÃO',  rowFn: (item,c) => fmtNum(c.custo_total,3),                  totFn: () => fmtNum(totCustoTotal,3) },
+    { id: 'lance',          label: 'NOVO LANCE<br>UNITÁRIO',       rowFn: (item,c) => fmtNum(parseFloat(item.novo_lance)||0,2), totFn: () => '' },
+    { id: 'novo_total',     label: 'NOVO LANCE<br>TOTAL',          rowFn: (item,c) => fmtNum(c.novo_total,2),                   totFn: () => fmtNum(totNovoTotal,2) },
+    { id: 'novo_lucro_pct', label: 'NOVO LUCRO<br>LÍQUIDO',       rowFn: (item,c) => fmtPct(c.novo_lucro_pct),                 totFn: () => fmtPct(totLucroLiqPct) },
+    { id: 'lucro_liq_rs',   label: 'LUCRO<br>LÍQUIDO R$',         rowFn: (item,c) => fmtNum(c.lucro_liq_rs,2),                 totFn: () => fmtNum(totLucroLiqRs,2) },
+    { id: 'dasn_rs',        label: 'DASN',                         rowFn: (item,c) => fmtNum(c.dasn_rs,2),                      totFn: () => fmtNum(totDasnRs,2) },
+    { id: 'custo_op',       label: 'CUSTO<br>OPERACIONAL',        rowFn: (item,c) => fmtNum(c.custo_op,2),                     totFn: () => fmtNum(totCustoOp,2) },
+  ];
+  const colsIds = colsSelecionadas && colsSelecionadas.length > 0 ? colsSelecionadas : COLS_FIN.map(c => c.id);
+  const colsAtivas = COLS_FIN.filter(c => colsIds.includes(c.id));
+  const nColsFin = colsAtivas.length;
+
+  // Cabeçalho h-pct (só se dasn ou custo_op estiverem ativos)
+  let hPctRow = '';
+  if (colsAtivas.some(c => ['dasn_rs','custo_op'].includes(c.id))) {
+    const nAntes = 4 + colsAtivas.filter(c => !['dasn_rs','custo_op'].includes(c.id)).length;
+    let pctCells = `<th colspan="${nAntes}"></th>`;
+    if (colsAtivas.find(c => c.id === 'dasn_rs'))  pctCells += `<th>${fmtNum(cfg.dasn,2)}%</th>`;
+    if (colsAtivas.find(c => c.id === 'custo_op')) pctCells += `<th>${fmtNum(cfg.taxa,2)}%</th>`;
+    hPctRow = `<tr class="h-pct">${pctCells}</tr>`;
+  }
+
+  // Cabeçalho h-col
+  const hColRow = `<tr class="h-col">
+    <th>Item</th><th>DESCRIÇÃO</th><th>Und</th><th>Quant</th>
+    ${colsAtivas.map(c => `<th>${c.label}</th>`).join('')}
+  </tr>`;
+
   const linhasTabela = itensSelecionados.map((item, idx) => {
     const c = calcs[idx];
     const qtd = parseFloat(item.quantidade) || 0;
-    const lance = parseFloat(item.novo_lance) || 0;
     return `<tr>
       <td>${idx + 1}</td>
       <td style="text-align:left;padding-left:6px">${item.descricao || ''}</td>
       <td>${item.unidade || ''}</td>
       <td>${qtd % 1 === 0 ? qtd.toFixed(0) : fmtNum(qtd, 3)}</td>
-      <td>${fmtNum(parseFloat(item.custo_unit) || 0, 3)}</td>
-      <td>${fmtNum(c.custo_total, 3)}</td>
-      <td>${fmtNum(lance, 2)}</td>
-      <td>${fmtNum(c.novo_total, 2)}</td>
-      <td>${fmtPct(c.novo_lucro_pct)}</td>
-      <td>${fmtNum(c.lucro_liq_rs, 2)}</td>
-      <td>${fmtNum(c.dasn_rs, 2)}</td>
-      <td>${fmtNum(c.custo_op, 2)}</td>
+      ${colsAtivas.map(col => `<td>${col.rowFn(item,c)}</td>`).join('')}
     </tr>`;
   }).join('');
+
+  const totaisRow = `<tr>
+    <td colspan="4" style="letter-spacing:2px">T O T A I S</td>
+    ${colsAtivas.map(col => `<td>${col.totFn()}</td>`).join('')}
+  </tr>`;
 
   const legendaItens = itensSelecionados.map((item, idx) =>
     `<div>CUSTO DE AQUISIÇÃO ITEM ${idx + 1}: R$${fmtNum(parseFloat(item.custo_unit) || 0, 2)}</div>`
@@ -1559,43 +1629,16 @@ function gerarDocumento(itensSelecionados) {
     <thead>
       <tr class="h-empresa">
         <th colspan="4"></th>
-        <th colspan="8">${empresaConfig.nomeTabela}</th>
+        <th colspan="${nColsFin || 1}">${empresaConfig.nomeTabela}</th>
       </tr>
-      <tr class="h-pct">
-        <th colspan="10"></th>
-        <th>${fmtNum(cfg.dasn, 2)}%</th>
-        <th>${fmtNum(cfg.taxa, 2)}%</th>
-      </tr>
-      <tr class="h-col">
-        <th>Item</th>
-        <th>DESCRIÇÃO</th>
-        <th>Und</th>
-        <th>Quant</th>
-        <th>CUSTO UNIT.<br>DE AQUISIÇÃO</th>
-        <th>CUSTO TOTAL<br>DE AQUISIÇÃO</th>
-        <th>NOVO LANCE<br>UNITÁRIO</th>
-        <th>NOVO LANCE<br>TOTAL</th>
-        <th>NOVO LUCRO<br>LÍQUIDO</th>
-        <th>LUCRO<br>LÍQUIDO R$</th>
-        <th>DASN</th>
-        <th>CUSTO<br>OPERACIONAL</th>
-      </tr>
+      ${hPctRow}
+      ${hColRow}
     </thead>
     <tbody>
       ${linhasTabela}
     </tbody>
     <tfoot>
-      <tr>
-        <td colspan="4" style="letter-spacing:2px">T O T A I S</td>
-        <td></td>
-        <td>${fmtNum(totCustoTotal, 3)}</td>
-        <td></td>
-        <td>${fmtNum(totNovoTotal, 2)}</td>
-        <td>${fmtPct(totLucroLiqPct)}</td>
-        <td>${fmtNum(totLucroLiqRs, 2)}</td>
-        <td>${fmtNum(totDasnRs, 2)}</td>
-        <td>${fmtNum(totCustoOp, 2)}</td>
-      </tr>
+      ${totaisRow}
     </tfoot>
   </table>
 
