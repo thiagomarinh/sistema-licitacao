@@ -169,7 +169,7 @@ def gerar_excel(data, empresa_info=None):
         totais['custo_op'] += custo_op
 
         values = [
-            i + 1, item.get('descricao', ''), item.get('unidade', ''), qtd,
+            item.get('num_item', i + 1), item.get('descricao', ''), item.get('unidade', ''), qtd,
             item.get('fornecedor', ''), item.get('marca', ''),
             custo_unit, custo_total, preco_venda_unit, preco_total,
             lucro_bruto_pct / 100, novo_lance, novo_total,

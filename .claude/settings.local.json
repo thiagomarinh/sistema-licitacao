@@ -8,7 +8,10 @@
       "Bash(where soffice:*)",
       "Read(//c/Program Files/LibreOffice/program/**)",
       "Read(//c/Program Files \\(x86\\)/LibreOffice/program/**)",
-      "Bash(pip show:*)"
+      "Bash(pip show:*)",
+      "Bash(python app.py)",
+      "PowerShell(Get-Command python, python3, py -ErrorAction SilentlyContinue)",
+      "PowerShell(python app.py)"
     ]
   }
 }

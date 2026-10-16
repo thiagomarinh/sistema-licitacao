@@ -1291,9 +1291,6 @@ async function carregar() {
     if (idParam) {
       await carregarComposicao(idParam);
     } else {
-      document.getElementById('cfg-taxa').value  = '7';
-      document.getElementById('cfg-lucro').value = '9';
-      document.getElementById('cfg-dasn').value  = '3';
       renderAll(); markClean();
     }
   } catch(e) { console.error('Erro ao carregar:', e); }
@@ -1429,7 +1426,7 @@ function abrirModalGerar() {
   lista.innerHTML = itens.map((item, idx) => `
     <label class="modal-item">
       <input type="checkbox" class="chk-item" value="${item.id}" checked>
-      <span class="modal-item-num">${idx + 1}</span>
+      <span class="modal-item-num">${item.num_item ?? idx + 1}</span>
       <span class="modal-item-desc">${item.descricao || '(sem descrição)'}</span>
       <span class="modal-item-qtd">${item.quantidade || 0} ${item.unidade || ''}</span>
     </label>`).join('');
@@ -1517,7 +1514,7 @@ function gerarDocumento(itensSelecionados, colsSelecionadas) {
     const c = calcs[idx];
     const qtd = parseFloat(item.quantidade) || 0;
     return `<tr>
-      <td>${idx + 1}</td>
+      <td>${item.num_item ?? idx + 1}</td>
       <td style="text-align:left;padding-left:6px">${item.descricao || ''}</td>
       <td>${item.unidade || ''}</td>
       <td>${qtd % 1 === 0 ? qtd.toFixed(0) : fmtNum(qtd, 3)}</td>
@@ -1531,7 +1528,7 @@ function gerarDocumento(itensSelecionados, colsSelecionadas) {
   </tr>`;
 
   const legendaItens = itensSelecionados.map((item, idx) =>
-    `<div>CUSTO DE AQUISIÇÃO ITEM ${idx + 1}: R$${fmtNum(parseFloat(item.custo_unit) || 0, 2)}</div>`
+    `<div>CUSTO DE AQUISIÇÃO ITEM ${item.num_item ?? idx + 1}: R$${fmtNum(parseFloat(item.custo_unit) || 0, 2)}</div>`
   ).join('');
 
   const logoUrl   = empresaInfo.logo_path ? `/static/${empresaInfo.logo_path}` : '';
