@@ -1,4 +1,5 @@
 import os
+import re
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required
 from werkzeug.utils import secure_filename
@@ -11,6 +12,9 @@ ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'webp'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXT
+
+def _so_digitos(valor):
+    return re.sub(r'\D', '', valor or '')
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -39,7 +43,8 @@ def cadastro():
             email       = email,
             cnpj        = request.form.get('cnpj', '').strip(),
             responsavel = request.form.get('responsavel', '').strip(),
-            documento   = request.form.get('documento', '').strip(),
+            documento   = request.form.get('cpf', '').strip(),
+            rg          = request.form.get('rg', '').strip(),
             endereco    = request.form.get('endereco', '').strip(),
             telefone    = request.form.get('telefone', '').strip(),
             site        = request.form.get('site', '').strip(),
@@ -84,7 +89,8 @@ def configuracoes():
             empresa.nome        = request.form.get('nome', '').strip()
             empresa.cnpj        = request.form.get('cnpj', '').strip()
             empresa.responsavel = request.form.get('responsavel', '').strip()
-            empresa.documento   = request.form.get('documento', '').strip()
+            empresa.documento   = request.form.get('cpf', '').strip()
+            empresa.rg          = request.form.get('rg', '').strip()
             empresa.endereco    = request.form.get('endereco', '').strip()
             empresa.telefone    = request.form.get('telefone', '').strip()
             empresa.site        = request.form.get('site', '').strip()
@@ -117,6 +123,33 @@ def configuracoes():
                 sucesso = 'Senha alterada com sucesso!'
 
     return render_template('configuracoes.html', empresa=empresa, erros=erros, sucesso=sucesso)
+
+
+@auth_bp.route('/esqueci-senha', methods=['GET', 'POST'])
+def esqueci_senha():
+    erros = {}
+    sucesso = None
+
+    if request.method == 'POST':
+        email       = request.form.get('email', '').strip().lower()
+        cnpj        = request.form.get('cnpj', '').strip()
+        senha_nova  = request.form.get('senha_nova', '')
+        senha_conf  = request.form.get('senha_conf', '')
+
+        empresa = Empresa.query.filter_by(email=email).first()
+
+        if not empresa or not empresa.cnpj or _so_digitos(empresa.cnpj) != _so_digitos(cnpj):
+            erros['geral'] = 'E-mail ou CNPJ não encontrados ou não correspondem.'
+        elif len(senha_nova) < 6:
+            erros['senha_nova'] = 'A nova senha deve ter ao menos 6 caracteres.'
+        elif senha_nova != senha_conf:
+            erros['senha_conf'] = 'As senhas não coincidem.'
+        else:
+            empresa.set_senha(senha_nova)
+            db.session.commit()
+            sucesso = 'Senha redefinida com sucesso! Você já pode entrar.'
+
+    return render_template('esqueci_senha.html', erros=erros, sucesso=sucesso)
 
 
 @auth_bp.route('/logout')

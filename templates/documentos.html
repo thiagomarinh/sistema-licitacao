@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Licita - Documetos</title>
+<title>Licita - Documentos</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -166,6 +166,7 @@
     <a href="/" class="nav-link">📋 Composições</a>
     <a href="/pregoes/" class="nav-link">🏷️ Pregões</a>
     <a href="/documentos/" class="nav-link ativo">📁 Documentos</a>
+    <a href="/declaracoes/" class="nav-link">📄 Declarações</a>
   </nav>
   <div class="topbar-actions">
     <span style="font-size:12px;font-weight:600;color:var(--muted)">{{ current_user.nome }}</span>
@@ -247,7 +248,6 @@
               {% else %}
                 <span>Sem data de vencimento</span>
               {% endif %}
-              <span>Adicionado em {{ doc.criado_em.strftime('%d/%m/%Y') }}</span>
             </div>
           </div>
           <div class="doc-status">

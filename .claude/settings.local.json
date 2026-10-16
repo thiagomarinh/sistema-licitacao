@@ -4,7 +4,14 @@
       "Bash(python -c \"from app import app; print\\(''OK''\\)\")",
       "Bash(pip install:*)",
       "Bash(python -c \"from app import app; print\\('OK'\\)\")",
-      "Bash(python -c ':*)"
+      "Bash(python -c ':*)",
+      "Bash(where soffice:*)",
+      "Read(//c/Program Files/LibreOffice/program/**)",
+      "Read(//c/Program Files \\(x86\\)/LibreOffice/program/**)",
+      "Bash(pip show:*)",
+      "Bash(python app.py)",
+      "PowerShell(Get-Command python, python3, py -ErrorAction SilentlyContinue)",
+      "PowerShell(python app.py)"
     ]
   }
 }

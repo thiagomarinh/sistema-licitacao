@@ -1,0 +1,19 @@
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    volumes:
+      - db_data:/app/data
+      - uploads_logos:/app/static/logos
+      - uploads_documentos:/app/static/documentos
+      - uploads_declaracoes:/app/static/declaracoes
+
+volumes:
+  db_data:
+  uploads_logos:
+  uploads_documentos:
+  uploads_declaracoes:

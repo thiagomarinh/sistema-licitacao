@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
-from models import db, Composicao
+from models import db, Composicao, Declaracao
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -112,3 +112,14 @@ def empresa_info():
         'site':        e.site,
         'logo_path':   e.logo_path,
     })
+
+
+@api_bp.route('/declaracoes', methods=['GET'])
+@login_required
+def listar_declaracoes():
+    decls = Declaracao.query.filter_by(empresa_id=current_user.id)\
+                            .order_by(Declaracao.nome.asc()).all()
+    return jsonify([
+        {'id': d.id, 'nome': d.nome}
+        for d in decls
+    ])
