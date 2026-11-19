@@ -773,6 +773,10 @@ td.pct-warn  { color: var(--red);    font-weight: 600; text-align: center; }
       <label>DASN %</label>
       <input type="number" id="cfg-dasn" value="" min="0" max="100" step="0.01" oninput="recalcAll(); markDirty()">
     </div>
+    <div class="config-item" style="display:flex;flex-direction:row;align-items:center;gap:6px">
+      <input type="checkbox" id="cfg-decimais4" style="width:auto" oninput="recalcAll(); markDirty()">
+      <label for="cfg-decimais4" style="margin:0;white-space:nowrap">4 casas decimais</label>
+    </div>
     <div class="config-badge" id="cfg-total-label">Desconto Total: 19,00%</div>
   </div>
 
@@ -913,9 +917,14 @@ async function carregarEmpresaInfo() {
 }
 
 // ===================== FORMATAÇÃO =====================
-function fmtBRL(v) {
-  if (isNaN(v) || v === null || v === undefined) return 'R$ 0,00';
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+function getDecimais() {
+  const chk = document.getElementById('cfg-decimais4');
+  return chk && chk.checked ? 4 : 2;
+}
+function fmtBRL(v, dec) {
+  if (isNaN(v) || v === null || v === undefined) v = 0;
+  const d = dec !== undefined ? dec : getDecimais();
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: d, maximumFractionDigits: d });
 }
 function fmtPct(v) {
   if (isNaN(v) || v === null) return '0,00%';
@@ -943,6 +952,7 @@ function getConfig() {
     taxa:     parseFloat(document.getElementById('cfg-taxa').value)  || 0,
     lucro_liq:parseFloat(document.getElementById('cfg-lucro').value) || 0,
     dasn:     parseFloat(document.getElementById('cfg-dasn').value)  || 0,
+    decimais4: document.getElementById('cfg-decimais4').checked,
   };
 }
 
@@ -1065,9 +1075,10 @@ function updateTotals() {
 }
 
 // ===================== FORMATAÇÃO BRL INPUT =====================
-function fmtNumInput(v) {
+function fmtNumInput(v, dec) {
   if (!v && v !== 0) return '';
-  return parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const d = dec !== undefined ? dec : getDecimais();
+  return parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
 }
 
 function setFieldBRL(id, field, input) {
@@ -1194,6 +1205,7 @@ async function carregarComposicao(id) {
       document.getElementById('cfg-taxa').value   = comp.config.taxa ?? '';
       document.getElementById('cfg-lucro').value  = comp.config.lucro_liq ?? '';
       document.getElementById('cfg-dasn').value   = comp.config.dasn ?? '';
+      document.getElementById('cfg-decimais4').checked = !!comp.config.decimais4;
     }
     itens = (comp.itens || []).map(i => ({ ...i, id: nextId++ }));
     renderAll();
@@ -1419,6 +1431,7 @@ function gerarDocumento(itensSelecionados) {
   if (!itensSelecionados || itensSelecionados.length === 0) { showToast('Nenhum item selecionado!', true); return; }
 
   const cfg = getConfig();
+  const dec = getDecimais();
   const numPregao  = document.getElementById('num-pregao').value  || '___/____';
   const numProcesso = document.getElementById('num-processo').value || '____________';
 
@@ -1445,19 +1458,19 @@ function gerarDocumento(itensSelecionados) {
       <td style="text-align:left;padding-left:6px">${item.descricao || ''}</td>
       <td>${item.unidade || ''}</td>
       <td>${qtd % 1 === 0 ? qtd.toFixed(0) : fmtNum(qtd, 3)}</td>
-      <td>${fmtNum(parseFloat(item.custo_unit) || 0, 3)}</td>
-      <td>${fmtNum(c.custo_total, 3)}</td>
-      <td>${fmtNum(lance, 2)}</td>
-      <td>${fmtNum(c.novo_total, 2)}</td>
+      <td>${fmtNum(parseFloat(item.custo_unit) || 0, dec)}</td>
+      <td>${fmtNum(c.custo_total, dec)}</td>
+      <td>${fmtNum(lance, dec)}</td>
+      <td>${fmtNum(c.novo_total, dec)}</td>
       <td>${fmtPct(c.novo_lucro_pct)}</td>
-      <td>${fmtNum(c.lucro_liq_rs, 2)}</td>
-      <td>${fmtNum(c.dasn_rs, 2)}</td>
-      <td>${fmtNum(c.custo_op, 2)}</td>
+      <td>${fmtNum(c.lucro_liq_rs, dec)}</td>
+      <td>${fmtNum(c.dasn_rs, dec)}</td>
+      <td>${fmtNum(c.custo_op, dec)}</td>
     </tr>`;
   }).join('');
 
   const legendaItens = itensSelecionados.map((item, idx) =>
-    `<div>CUSTO DE AQUISIÇÃO ITEM ${idx + 1}: R$${fmtNum(parseFloat(item.custo_unit) || 0, 2)}</div>`
+    `<div>CUSTO DE AQUISIÇÃO ITEM ${idx + 1}: R$${fmtNum(parseFloat(item.custo_unit) || 0, dec)}</div>`
   ).join('');
 
   const logoUrl   = empresaInfo.logo_path ? `/static/${empresaInfo.logo_path}` : '';
@@ -1584,13 +1597,13 @@ function gerarDocumento(itensSelecionados) {
       <tr>
         <td colspan="4" style="letter-spacing:2px">T O T A I S</td>
         <td></td>
-        <td>${fmtNum(totCustoTotal, 3)}</td>
+        <td>${fmtNum(totCustoTotal, dec)}</td>
         <td></td>
-        <td>${fmtNum(totNovoTotal, 2)}</td>
+        <td>${fmtNum(totNovoTotal, dec)}</td>
         <td>${fmtPct(totLucroLiqPct)}</td>
-        <td>${fmtNum(totLucroLiqRs, 2)}</td>
-        <td>${fmtNum(totDasnRs, 2)}</td>
-        <td>${fmtNum(totCustoOp, 2)}</td>
+        <td>${fmtNum(totLucroLiqRs, dec)}</td>
+        <td>${fmtNum(totDasnRs, dec)}</td>
+        <td>${fmtNum(totCustoOp, dec)}</td>
       </tr>
     </tfoot>
   </table>
@@ -1598,10 +1611,10 @@ function gerarDocumento(itensSelecionados) {
   <div class="legenda">
     <h3>Legenda</h3>
     ${legendaItens}
-    <div>VALOR TOTAL: R$${fmtNum(totNovoTotal, 2)}</div>
-    <div>LUCRO LÍQUIDO: R$ ${fmtNum(totLucroLiqRs, 2)} (${fmtPct(totLucroLiqPct)})</div>
-    <div>IMPOSTO(DASN): R$ ${fmtNum(totDasnRs, 2)} (${fmtNum(cfg.dasn, 0)}%)</div>
-    <div>CUSTO OPERACIONAL : R$ ${fmtNum(totCustoOp, 2)} (${fmtNum(cfg.taxa, 0)}%)</div>
+    <div>VALOR TOTAL: R$${fmtNum(totNovoTotal, dec)}</div>
+    <div>LUCRO LÍQUIDO: R$ ${fmtNum(totLucroLiqRs, dec)} (${fmtPct(totLucroLiqPct)})</div>
+    <div>IMPOSTO(DASN): R$ ${fmtNum(totDasnRs, dec)} (${fmtNum(cfg.dasn, 0)}%)</div>
+    <div>CUSTO OPERACIONAL : R$ ${fmtNum(totCustoOp, dec)} (${fmtNum(cfg.taxa, 0)}%)</div>
   </div>
 
   <div class="spacer"></div>
